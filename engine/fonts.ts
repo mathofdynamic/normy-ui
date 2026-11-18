@@ -1,0 +1,20 @@
+/** Font families bundled via next/font (see app/fonts.ts). Values are CSS stacks usable as tokens. */
+export const FONT_OPTIONS: Array<{ label: string; value: string; kind: "sans" | "serif" | "mono" | "display" }> = [
+  { label: "Archivo (wide grotesk)", value: "var(--font-archivo), ui-sans-serif, sans-serif", kind: "display" },
+  { label: "IBM Plex Sans", value: "var(--font-plex-sans), ui-sans-serif, sans-serif", kind: "sans" },
+  { label: "IBM Plex Mono", value: "var(--font-plex-mono), ui-monospace, monospace", kind: "mono" },
+  { label: "Space Grotesk", value: "var(--font-space-grotesk), ui-sans-serif, sans-serif", kind: "display" },
+  { label: "Space Mono", value: "var(--font-space-mono), ui-monospace, monospace", kind: "mono" },
+  { label: "Manrope", value: "var(--font-manrope), ui-sans-serif, sans-serif", kind: "sans" },
+  { label: "Fraunces (soft serif)", value: "var(--font-fraunces), ui-serif, Georgia, serif", kind: "serif" },
+  { label: "Newsreader (text serif)", value: "var(--font-newsreader), ui-serif, Georgia, serif", kind: "serif" },
+  { label: "Cormorant Garamond", value: "var(--font-cormorant), ui-serif, Georgia, serif", kind: "serif" },
+  { label: "Jost (geometric)", value: "var(--font-jost), ui-sans-serif, sans-serif", kind: "sans" },
+  { label: "Fredoka (rounded)", value: "var(--font-fredoka), ui-rounded, sans-serif", kind: "display" },
+  { label: "Nunito (rounded text)", value: "var(--font-nunito), ui-rounded, sans-serif", kind: "sans" },
+  { label: "Roboto", value: "var(--font-roboto), ui-sans-serif, sans-serif", kind: "sans" },
+  { label: "JetBrains Mono", value: "var(--font-jetbrains), ui-monospace, monospace", kind: "mono" },
+  { label: "DM Sans", value: "var(--font-dm-sans), ui-sans-serif, sans-serif", kind: "sans" },
+  { label: "System UI", value: "system-ui, sans-serif", kind: "sans" },
+  { label: "Georgia (system serif)", value: "Georgia, 'Times New Roman', serif", kind: "serif" },
+];

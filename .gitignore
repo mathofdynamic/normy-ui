@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Normy: local saved design systems (user data, created by the Studio)
+/design-systems/
+
+# Normy: intermediate milestone screenshots (final/ and proof/ are kept)
+/screenshots/m-*/
+/screenshots/_systems/
+/screenshots/*.png

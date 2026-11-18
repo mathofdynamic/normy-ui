@@ -1,0 +1,79 @@
+# Progress
+
+Resume rule: find the first unchecked box and continue there. Each milestone ends with typecheck,
+lint, Playwright screenshots (390/768/1440 × light/dark) into `screenshots/<milestone>/`, and a
+review of those screenshots.
+
+## M0 Audit + docs
+- [x] Audit existing code (11 components, Tailwind tokens, showcase site)
+- [x] docs/PROPERTY-SPACE.md (R1)
+- [x] docs/ARCHITECTURE.md, docs/DECISIONS.md, PROGRESS.md
+
+## M-a Registry + resolver + cascade
+- [x] engine/types.ts
+- [x] registry: tokens + property groups
+- [x] values.ts (token refs, shadows, gradients, easing, spring→linear)
+- [x] cascade.ts (score, match, explain)
+- [x] compile.ts (+ @property, media, mode, states, motion manifest)
+- [x] default system + runtime/apply + boot script
+- [x] checks + screenshots (engine check script: 411 registry entries, ~6ms compile)
+
+## M-b Component migration (≥40)
+- [x] use-n helpers, Icon set
+- [x] migrate the 11 existing components
+- [x] new components to reach ≥ 50
+- [x] showcase landing on the new APIs
+- [x] checks + screenshots
+
+## M-c Animation engine
+- [x] entrance (batches, stagger, in-view, once)
+- [x] interaction fx (magnetic, tilt, ripple, spotlight, cursor, parallax)
+- [x] scroll effects, ambient keyframes, behaviours (marquee, carousel, typewriter, count-up)
+- [x] page transitions, global speed / disable / reduce policy
+- [x] checks + screenshots
+
+## M-d Studio shell + inspector
+- [x] store (system, history, selection), three panes
+- [x] canvas iframe + PreviewAgent protocol, devices, mode, inspect, force state
+- [x] inspector generated from the registry, origin + reset, search
+- [x] undo/redo, copy/paste, compare, command palette, autosave
+- [x] checks + screenshots
+
+## M-e Save / load / export
+- [x] route handlers + disk storage + versions
+- [x] systems panel: save, save as, duplicate, delete, import/export, diff
+- [x] exports: CSS, Tailwind, TS, W3C
+- [x] checks + screenshots
+
+## M-f Preview pages
+- [x] landing: SaaS home, pricing, blog index, article, shop listing, product, portfolio, docs, login, signup, 404
+- [x] dashboard: analytics, data table, settings, kanban, inbox, calendar, checkout, states
+- [x] checks + screenshots
+- [x] PROOF: the same pages under two starter systems
+
+## M-g Atlas, Motion Lab, Analyzer
+- [x] Atlas
+- [x] Motion Lab (presets, easing editor, scrubber, fx, ambient)
+- [x] Analyzer (coverage, contrast, token usage, unused rules, page scan)
+- [x] checks + screenshots
+
+## M-h Starter systems (≥6)
+- [x] Normy, Brutalist, Glass, Editorial, Neumorphic, Material, Terminal, Playful, Luxury
+- [x] screenshots under each
+
+## M-i Polish
+- [x] a11y pass, reduced motion, keyboard
+- [x] PROPERTY-SPACE R4, final docs
+- [x] final typecheck + lint + screenshots
+
+## Log
+- 2026-11-18: engine + 62 components render from data (smoke test light/dark OK, no console errors). Notes:
+  hydration-safe motion runtime (no DOM attribute bookkeeping); stateful parts; overlay roots are display:contents wrappers.
+- 2026-11-19: Studio, save/load API, 19 preview pages, 9 starter systems done. Proof sheets in
+  screenshots/proof/ (saas-sheet.png, sheet-2.png). Structural rules added (hero layout per system).
+  Dev server: use `bash scripts/with-server.sh <cmd>` (starts + stops a server per command).
+  NEXT: Atlas, Motion Lab, Analyzer, hub home page, Th onSort, VisuallyHidden cleanup, full screenshots.
+- 2026-11-19: Labs (Atlas, Motion Lab, Analyzer) and hub done. Analyzer caught a real contrast bug
+  (border-strong < 3:1), fixed in tokens. Mobile overflow fixed on table/inbox/checkout/app bar.
+  Tailwind removed. Production build passes (28 routes). Studio e2e: 10/10 PASS.
+  Final screenshot matrix: screenshots/final (pnpm screenshots).

@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { AppShell as AppShellFrame, Avatar, Badge, Button, CommandPalette, Dock, Dropdown, Footer, IconButton, Input, Navbar, Row, Sidebar, Stack, Text, Toaster, useCommandShortcut, type CommandItem } from "@/components/normy";
 import { applyMode, applySystem, motionReduced, motionSpeed, storedMode } from "@/engine/runtime/apply";
 import { STARTERS } from "@/engine/systems";
@@ -34,13 +34,14 @@ const PAGE_FX: Record<string, Keyframe[]> = {
 export function PageTransition({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const path = usePathname();
-  const first = useRef(true);
-  useEffect(() => {
+  // Animate only when the path really changes. A "first run" flag is not enough: React runs
+  // effects twice on mount in development, which faded every freshly loaded page a second time.
+  const prevPath = useRef<string | null>(null);
+  useLayoutEffect(() => {
     const el = ref.current;
-    if (first.current) {
-      first.current = false;
-      return;
-    }
+    const prev = prevPath.current;
+    prevPath.current = path;
+    if (prev === null || prev === path) return;
     if (!el || motionReduced()) return;
     const cs = getComputedStyle(document.documentElement);
     const fx = cs.getPropertyValue("--n-motion-page-effect").trim() || "fade";

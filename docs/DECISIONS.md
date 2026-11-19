@@ -132,3 +132,20 @@ interface was tiny, and nothing could be resized. These decisions answer that re
     - Device switching stays available below 1180 px as a compact select.
     - Fixed the canvas frame shrinking in Desktop/Tablet/Compare.
     - Fixed the interface-size setting being lost on load.
+39. **No "page loads twice" flash.** Pages briefly showed fully drawn and then animated in again.
+    There were two causes:
+    - The page-transition fade ran on first load, because React runs mount effects twice in
+      development.
+    - Entrance targets were visible until the motion runtime started after hydration.
+
+    The fixes:
+    - The page transition now runs only when the path actually changes, and in a layout effect
+      (before paint).
+    - The boot script sets `html[data-n-pre]`. The compiler emits a rule that keeps entrance
+      targets at opacity 0 while it is set.
+    - The runtime holds each target in its start pose with a WAAPI fill. This adds no DOM
+      attributes, so hydration is safe. The hold is released when the entrance plays.
+    - Nodes added by client navigation are scanned synchronously in the MutationObserver
+      callback, before paint.
+    - Safety timeout of 2.5 s; reduced motion skips the hold.
+    - `scripts/flash-check.mjs` samples heading opacity on every frame to catch regressions.

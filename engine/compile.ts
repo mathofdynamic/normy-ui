@@ -309,6 +309,10 @@ export function compile(system: DesignSystem, components: ComponentDef[], opts: 
     if (hasAny(rule.props, ["fx"])) manifest.fx.push(bare);
   }
 
+  // Pre-paint hold: until the motion runtime takes over, entrance targets stay invisible
+  // instead of flashing in fully drawn and then animating a second time.
+  if (manifest.enter.length) parts.push(`${manifest.enter.map((s) => `html[data-n-pre] :where(${s})`).join(",")}{opacity:0}`);
+
   const out = parts.join("\n");
   const ms = typeof performance !== "undefined" ? performance.now() - t0 : 0;
   return { css: out, manifest, stats: { rules: ordered.length, declarations, bytes: out.length, ms } };

@@ -133,11 +133,27 @@ export function enterKeyframes(c: EnterConfig): Keyframe[] {
 }
 
 const running = new WeakMap<Element, Animation>();
+const holds = new WeakMap<Element, Animation>();
+
+/** Keep an element in its entrance start pose until it is revealed. */
+function hold(el: HTMLElement, c: EnterConfig) {
+  if (motionReduced() || holds.has(el)) return;
+  try {
+    const from = enterKeyframes(c)[0];
+    holds.set(el, el.animate([from, from], { duration: 1, fill: "forwards" }));
+  } catch {
+    /* ignore */
+  }
+}
+function release(el: Element) {
+  holds.get(el)?.cancel();
+  holds.delete(el);
+}
 
 export function playEnter(el: HTMLElement, c: EnterConfig, extraDelay = 0) {
   entered.add(el);
   tracked.add(el);
-  if (motionReduced()) return;
+  if (motionReduced()) return release(el);
   const speed = motionSpeed();
   running.get(el)?.cancel();
   try {
@@ -148,9 +164,10 @@ export function playEnter(el: HTMLElement, c: EnterConfig, extraDelay = 0) {
       fill: "backwards",
     });
     running.set(el, a);
+    release(el); // the entrance animation's backwards fill now holds the start pose
     a.onfinish = () => running.delete(el);
   } catch {
-    /* invalid easing in older engines */
+    release(el);
   }
 }
 
@@ -202,9 +219,11 @@ function observe(el: HTMLElement, c: EnterConfig) {
     return;
   }
   if (c.trigger === "load" || motionReduced()) {
+    hold(el, c);
     queue(el, c);
     return;
   }
+  hold(el, c);
   const obs = new IntersectionObserver(
     (entries) => {
       for (const e of entries) {
@@ -216,6 +235,7 @@ function observe(el: HTMLElement, c: EnterConfig) {
         } else if (!c.once && entered.has(t)) {
           entered.delete(t);
           running.get(t)?.cancel();
+          hold(t, c);
         }
       }
     },
@@ -225,9 +245,34 @@ function observe(el: HTMLElement, c: EnterConfig) {
   io.push(obs);
 }
 
+/** Entrance part of a scan only: cheap enough to run synchronously before paint. */
+function scanEnter(root: ParentNode) {
+  const manifest = currentResult()?.manifest;
+  if (!manifest?.enter.length) return;
+  let nodes: HTMLElement[];
+  try {
+    const sel = manifest.enter.join(",");
+    nodes = Array.from(root.querySelectorAll<HTMLElement>(sel));
+    if (root instanceof HTMLElement && root.matches(sel)) nodes.unshift(root);
+  } catch {
+    return;
+  }
+  for (const el of nodes) {
+    if (entered.has(el) || observed.has(el)) continue;
+    const c = readEnter(el);
+    if (c) observe(el, c);
+    else entered.add(el);
+  }
+}
+
+/** Hand over from the boot script's CSS hold to the runtime's per-element holds. */
+function releasePre() {
+  document.documentElement.removeAttribute("data-n-pre");
+}
+
 export function scan(root: ParentNode = document) {
   const manifest = currentResult()?.manifest;
-  if (!manifest) return;
+  if (!manifest) return releasePre();
   if (manifest.enter.length) {
     const sel = manifest.enter.join(",");
     let nodes: NodeListOf<HTMLElement>;
@@ -262,10 +307,12 @@ export function scan(root: ParentNode = document) {
   }
   behaviours(root);
   onScroll();
+  releasePre();
 }
 
 /** Re-run entrance animations (Studio "Replay", Motion Lab). */
 export function replay(root: ParentNode = document) {
+  for (const el of tracked) release(el);
   entered = new WeakSet();
   observed = new WeakSet();
   counted = new WeakSet();
@@ -630,7 +677,16 @@ export function startMotion() {
     rescan();
   });
   mo = new MutationObserver((muts) => {
-    if (muts.some((m) => m.addedNodes.length)) rescan();
+    let added = false;
+    for (const m of muts)
+      for (const n of m.addedNodes) {
+        if (n instanceof HTMLElement) {
+          // Runs as a microtask, i.e. before the new content is painted: no visible-then-hidden flash.
+          scanEnter(n);
+          added = true;
+        }
+      }
+    if (added) rescan();
   });
   mo.observe(document.body, { childList: true, subtree: true });
   document.addEventListener("pointermove", onMove, { passive: true });

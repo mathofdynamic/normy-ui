@@ -123,3 +123,12 @@ interface was tiny, and nothing could be resized. These decisions answer that re
     It does not show again once dismissed, and "Welcome & tips" reopens it.
 37. **The Hub is a product landing page** (hero + product shot, how it works, starters, features,
     pages). Engineering stats moved out of the hero.
+38. **Self-review fixes (2026-11-19):**
+    - Theme-linked values show as readable chips ("↳ Radius md") instead of raw `var(--n-…)` text,
+      and the token picker lists friendly names.
+    - Simple mode always starts on the whole component; the part you clicked is suggested with a
+      dashed pill.
+    - Essentials use plain labels ("Border colour", "Corner radius").
+    - Device switching stays available below 1180 px as a compact select.
+    - Fixed the canvas frame shrinking in Desktop/Tablet/Compare.
+    - Fixed the interface-size setting being lost on load.

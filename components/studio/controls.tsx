@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { DERIVED_TOKEN_IDS } from "@/engine/compile";
 import { FONT_OPTIONS } from "@/engine/fonts";
-import { TOKENS } from "@/engine/registry";
+import { getDef, TOKENS } from "@/engine/registry";
+import { tokenVar } from "@/engine/registry/tokens";
 import type { Control, EasingValue, GradientValue, PropertyDef, ShadowValue, TokenGroup, Value } from "@/engine/types";
 import { easingSampler, gradientToCss, refs, shadowToCss } from "@/engine/values";
 import "./studio.css";
@@ -22,20 +23,48 @@ const tokenIdsFor = (groups: TokenGroup[] | undefined): string[] => {
   return ids.filter((id) => groups.includes(id.split(".")[0] as TokenGroup));
 };
 
+/** Friendly name of a token id ("color.text-muted" → "Text muted", "radius.md" → "Radius md"). */
+export const tokenName = (id: string) => getDef(id)?.label ?? id.replace(/[.-]/g, " ").replace(/^./, (c) => c.toUpperCase());
+
+/** The token a value points at, whether written as {id} or var(--n-…). */
+export function refId(value: Value): string | null {
+  if (typeof value !== "string") return null;
+  const t = value.trim();
+  const m = t.match(/^\{([a-z0-9.-]+)\}$/i);
+  if (m) return m[1];
+  const v = t.match(/^var\((--n-[a-z0-9-]+)\)$/i);
+  if (!v) return null;
+  return [...TOKENS.map((x) => x.id), ...DERIVED_TOKEN_IDS].find((id) => tokenVar(id) === v[1]) ?? null;
+}
+
 function TokenSelect({ groups, value, onChange }: { groups?: TokenGroup[]; value: Value; onChange: OnChange }) {
   const ids = tokenIdsFor(groups);
   if (!ids.length) return null;
-  const cur = typeof value === "string" && /^\{.+\}$/.test(value) ? value.slice(1, -1) : "";
+  const cur = refId(value) ?? "";
   return (
-    <select className="st-token" aria-label="Token" value={cur} onChange={(e) => onChange(e.target.value ? `{${e.target.value}}` : undefined)} title="Use a token">
-      <option value="">◇ token</option>
+    <select className="st-token" aria-label="Token" value={ids.includes(cur) ? cur : ""} onChange={(e) => onChange(e.target.value ? `{${e.target.value}}` : undefined)} title="Link to a theme value">
+      <option value="">Theme…</option>
       {ids.map((id) => (
         <option key={id} value={id}>
-          {id}
+          {tokenName(id)}
         </option>
       ))}
     </select>
   );
+}
+
+/** Shows a theme-linked value as a readable chip; click it to type a custom value instead. */
+function ValueText({ value, onChange, label, placeholder }: { value: Value; onChange: (v: string) => void; label: string; placeholder?: string }) {
+  const [editing, setEditing] = useState(false);
+  const id = refId(value);
+  if (id && !editing) {
+    return (
+      <button type="button" className="st-linked" title="Linked to a theme value. Click to type your own." onClick={() => setEditing(true)} aria-label={`${label}: linked to ${tokenName(id)}`}>
+        ↳ {tokenName(id)}
+      </button>
+    );
+  }
+  return <TextIn label={label} value={toStr(value)} placeholder={placeholder} onChange={onChange} />;
 }
 
 /** Text input that commits on change but keeps local typing state. */
@@ -87,7 +116,7 @@ function ColorControl({ value, onChange, def, label }: { value: Value; onChange:
       <span className="st-swatch" style={{ background: s ? refs(s) : "transparent" }}>
         <input type="color" aria-label={`${label} picker`} value={toHex(s)} onChange={(e) => onChange(e.target.value)} />
       </span>
-      <TextIn label={label} value={s} placeholder="oklch(…) / #hex / {token}" onChange={(v) => onChange(v || undefined)} />
+      <ValueText label={label} value={value} placeholder="Inherited · type #hex" onChange={(v) => onChange(v || undefined)} />
       <TokenSelect groups={def?.tokens ?? ["color"]} value={value} onChange={onChange} />
     </div>
   );
@@ -117,7 +146,7 @@ function LengthControl({ c, value, onChange, def, label }: { c: Extract<Control,
         value={n ?? c.min ?? 0}
         onChange={(e) => onChange(u ? `${e.target.value}${u}` : Number(e.target.value))}
       />
-      <TextIn label={label} value={toStr(value)} placeholder="auto" onChange={(v) => onChange(v === "" ? undefined : /^-?[\d.]+$/.test(v) && u ? `${v}${u}` : v)} />
+      <ValueText label={label} value={value} placeholder="auto" onChange={(v) => onChange(v === "" ? undefined : /^-?[\d.]+$/.test(v) && u ? `${v}${u}` : v)} />
       <TokenSelect groups={def.tokens ?? c.tokens} value={value} onChange={onChange} />
     </div>
   );
@@ -128,7 +157,7 @@ function NumberControl({ c, value, onChange, label, def }: { c: { min?: number; 
   return (
     <div className="st-row-ctl">
       <input type="range" className="st-range" aria-label={`${label} slider`} min={c.min ?? 0} max={c.max ?? 100} step={c.step ?? 1} value={Number.isFinite(n) ? n : (c.min ?? 0)} onChange={(e) => onChange(Number(e.target.value))} />
-      <TextIn label={label} value={toStr(value)} placeholder="—" onChange={(v) => onChange(v === "" ? undefined : /^-?[\d.]+$/.test(v) ? Number(v) : v)} />
+      <ValueText label={label} value={value} placeholder="—" onChange={(v) => onChange(v === "" ? undefined : /^-?[\d.]+$/.test(v) ? Number(v) : v)} />
       {c.unit ? <span className="st-unit">{c.unit}</span> : null}
       {def?.tokens ? <TokenSelect groups={def.tokens} value={value} onChange={onChange} /> : null}
     </div>
@@ -141,7 +170,7 @@ function SelectControl({ c, value, onChange, label }: { c: Extract<Control, { ty
   const s = toStr(value);
   return (
     <select className="st-in" aria-label={label} value={s} onChange={(e) => onChange(e.target.value || undefined)}>
-      <option value="">— inherit —</option>
+      <option value="">Inherited</option>
       {c.options.map((o) => (
         <option key={o.value} value={o.value}>
           {o.label}

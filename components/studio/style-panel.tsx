@@ -133,7 +133,7 @@ function BrandColor() {
         </span>
         <span className="st-stack-sm">
           <b>{active === "custom" ? "Custom colour" : "Pick any colour"}</b>
-          <input className="st-in st-mono" placeholder="#2563eb" aria-label="Brand colour hex" value={hex} onChange={(e) => setCustom(e.target.value)} />
+          <input className="st-in st-mono" placeholder="Type a hex, e.g. #ff5a1f" aria-label="Brand colour hex" value={hex} onChange={(e) => setCustom(e.target.value)} />
         </span>
       </label>
       <p className="st-note">Every accent role (buttons, links, focus rings, selection, charts) is derived for both light and dark mode.</p>

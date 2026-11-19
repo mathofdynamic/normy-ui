@@ -1804,3 +1804,54 @@ div.st-choice {
     display: none;
   }
 }
+.st-frame {
+  flex-shrink: 0;
+}
+.st-linked {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 2.125rem;
+  padding: 0 0.625rem;
+  border: 1px dashed var(--n-color-border-strong);
+  border-radius: 7px;
+  background: var(--n-color-surface-sunken);
+  color: var(--n-color-text-muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: text;
+}
+.st-linked:hover {
+  border-color: var(--n-color-accent);
+  color: var(--n-color-text);
+}
+.st-pills button[data-clicked] {
+  border-color: var(--n-color-accent);
+  color: var(--n-color-accent-text);
+  border-style: dashed;
+}
+.st-device-select {
+  display: none;
+  height: 2.25rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--n-color-border);
+  border-radius: 8px;
+  background: var(--n-color-surface-raised);
+  color: var(--n-color-text);
+  font: inherit;
+}
+@media (max-width: 1180px) {
+  .st-device-select {
+    display: block;
+  }
+  .st-status {
+    display: none;
+  }
+}
+.st-stack-sm > .st-in {
+  flex: none;
+  height: 2.125rem;
+}

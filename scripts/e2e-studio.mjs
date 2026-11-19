@@ -2,7 +2,7 @@
 import { existsSync, readdirSync, rmSync } from "node:fs";
 import { launch } from "./launch-browser.mjs";
 
-const BASE = "http://localhost:3100";
+const BASE = process.env.URL ?? "http://localhost:3100";
 const ok = (cond, msg) => {
   console.log(`${cond ? "PASS" : "FAIL"}  ${msg}`);
   if (!cond) process.exitCode = 1;
@@ -45,6 +45,8 @@ await p.locator(".st-choice-hit", { hasText: "Just this one" }).click();
 await p.waitForTimeout(200);
 await p.getByLabel("Search properties").fill("radius");
 await p.waitForTimeout(300);
+const linked = p.locator('.st-prop button[aria-label^="Radius: linked"]').first();
+if (await linked.count()) await linked.click(); // theme-linked values show as a chip until you type your own
 await p.locator('.st-prop input[aria-label="Radius"]').first().fill("22px");
 await p.waitForTimeout(700);
 const r1 = await f.locator('[data-n-id="hero-cta"]').evaluate((el) => getComputedStyle(el).borderTopLeftRadius);

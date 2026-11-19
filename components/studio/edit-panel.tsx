@@ -55,11 +55,33 @@ const ESSENTIALS: Array<{ title: string; icon: Parameters<typeof Icon>[0]["name"
   { title: "Motion", icon: "zap", props: ["transitionDuration", "enterEffect", "fxPressScale", "fxMagnetic", "fxTilt"] },
 ];
 
+/** Plain names for the essentials (registry labels are written for the full list). */
+const FRIENDLY: Record<string, string> = {
+  bg: "Background",
+  color: "Text colour",
+  borderColor: "Border colour",
+  iconColor: "Icon colour",
+  gradient: "Gradient",
+  radius: "Corner radius",
+  borderWidth: "Border width",
+  borderStyle: "Border style",
+  paddingX: "Padding sides",
+  paddingY: "Padding top/bottom",
+  minHeight: "Min height",
+  maxWidth: "Max width",
+  transitionDuration: "Transition speed",
+  enterEffect: "Entrance animation",
+  fxPressScale: "Press shrink",
+  fxMagnetic: "Magnetic pull",
+  fxTilt: "3D tilt",
+};
+
 const SMALL_CONTROLS = new Set<Category>(["actions", "forms", "feedback"]);
 
 /* ---------------- one property row ---------------- */
 
-function PropRow({ def, scope, ordered, scopeName }: { def: PropertyDef; scope: Scope; ordered: ReturnType<typeof orderRules>; scopeName: string }) {
+function PropRow({ def: raw, scope, ordered, scopeName, friendly }: { def: PropertyDef; scope: Scope; ordered: ReturnType<typeof orderRules>; scopeName: string; friendly?: boolean }) {
+  const def = friendly && FRIENDLY[raw.id] ? { ...raw, label: FRIENDLY[raw.id] } : raw;
   const system = useStudio((s) => s.system);
   const setPropAt = useStudio((s) => s.setPropAt);
   const here = findRule(system, scope)?.props[def.id];
@@ -227,6 +249,8 @@ function Conditions({ def }: { def: ComponentDef }) {
   const scope = useStudio((s) => s.scope);
   const patch = useStudio((s) => s.patchScope);
   const parts = Object.keys(def.parts).filter((p) => p !== "root");
+  const picked = useStudio((s) => s.picked);
+  const clicked = picked?.component === def.type ? picked.part : undefined;
   const [more, setMore] = useState(!!(scope.bp || scope.mode || scope.size));
   return (
     <>
@@ -238,7 +262,7 @@ function Conditions({ def }: { def: ComponentDef }) {
               Whole {def.label.toLowerCase()}
             </button>
             {parts.map((p) => (
-              <button key={p} type="button" role="radio" aria-checked={scope.part === p} data-active={scope.part === p ? "" : undefined} onClick={() => patch({ part: p })}>
+              <button key={p} type="button" role="radio" aria-checked={scope.part === p} data-active={scope.part === p ? "" : undefined} data-clicked={clicked === p && scope.part !== p ? "" : undefined} title={clicked === p ? "The part you clicked" : undefined} onClick={() => patch({ part: p })}>
                 {partLabel(def, p)}
               </button>
             ))}
@@ -382,7 +406,7 @@ function Editor({ def }: { def: ComponentDef }) {
                   <Icon name={g.icon} /> {g.title}
                 </h4>
                 {defs.map((d) => (
-                  <PropRow key={d.id} def={d} scope={scope} ordered={ordered} scopeName={scopeName} />
+                  <PropRow key={d.id} def={d} scope={scope} ordered={ordered} scopeName={scopeName} friendly />
                 ))}
               </section>
             );
@@ -463,4 +487,5 @@ export function describeScope(scope: Scope): string {
   return s;
 }
 
-export const defaultPart = (def: ComponentDef | undefined, part: string | undefined) => (def && SMALL_CONTROLS.has(def.category) ? undefined : part);
+/** Simple mode always starts with the whole component; the clicked part is suggested as a pill. */
+export const defaultPart = (def: ComponentDef | undefined, part: string | undefined) => (def && (SMALL_CONTROLS.has(def.category) || part) ? undefined : part);

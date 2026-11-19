@@ -226,7 +226,7 @@ const shape = (base: string | undefined, pill = false): TokenPatch =>
 export const CORNER_CHOICES: Array<Choice & { r: string }> = [
   { id: "sharp", label: "Sharp", patch: shape("0px"), r: "0px" },
   { id: "subtle", label: "Subtle", patch: shape("4px"), r: "4px" },
-  { id: "rounded", label: "Round", patch: shape(undefined), r: "8px" },
+  { id: "rounded", label: "Round", patch: shape("8px"), r: "8px" },
   { id: "soft", label: "Soft", patch: shape("14px"), r: "14px" },
   { id: "pill", label: "Pill", patch: shape("16px", true), r: "999px" },
 ];

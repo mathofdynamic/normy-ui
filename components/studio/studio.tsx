@@ -14,7 +14,7 @@ import { STARTERS } from "@/engine/systems";
 import { STUDIO_SYSTEM } from "@/engine/systems/studio";
 import { STATES, type StateName } from "@/engine/types";
 import { Canvas } from "./canvas";
-import { describeScope, EditPanel } from "./edit-panel";
+import { describeScope, EditPanel, STATE_LABEL } from "./edit-panel";
 import { ExportPanel, HistoryPanel, saveCurrent, SystemsPanel } from "./panels";
 import { StylePanel } from "./style-panel";
 import { DEVICES, useStudio, type Device, type Panel } from "./store";
@@ -87,12 +87,30 @@ function useUiPrefs() {
   }, []);
   useEffect(() => {
     document.documentElement.style.fontSize = `${UI_PX[size]}px`;
-    localStorage.setItem(UI_KEY, JSON.stringify({ size, width }));
     return () => {
       document.documentElement.style.fontSize = "";
     };
-  }, [size, width]);
-  return { size, setSize, width, setWidth };
+  }, [size]);
+  const persist = (patch: { size?: UiSize; width?: number }) => {
+    try {
+      const cur = JSON.parse(localStorage.getItem(UI_KEY) ?? "{}");
+      localStorage.setItem(UI_KEY, JSON.stringify({ ...cur, ...patch }));
+    } catch {
+      /* ignore */
+    }
+  };
+  return {
+    size,
+    setSize: (s: UiSize) => {
+      setSize(s);
+      persist({ size: s });
+    },
+    width,
+    setWidth: (w: number) => {
+      setWidth(w);
+      persist({ width: w });
+    },
+  };
 }
 
 /* ---------------- top bar ---------------- */
@@ -171,6 +189,13 @@ function TopBar({ onPalette, onHelp, ui }: { onPalette: () => void; onHelp: () =
             </button>
           ))}
         </div>
+        <select className="st-device-select" aria-label="Device (compact)" value={device} onChange={(e) => st.set({ device: e.target.value as Device })}>
+          {(Object.keys(DEVICES) as Device[]).map((d) => (
+            <option key={d} value={d}>
+              {DEVICES[d].label}
+            </option>
+          ))}
+        </select>
         <Tooltip content={mode === "dark" ? "Switch preview to light" : "Switch preview to dark"}>
           <button type="button" className="st-icon st-icon-lg" aria-label="Toggle light / dark preview" onClick={() => st.set({ mode: mode === "dark" ? "light" : "dark" })}>
             <Icon name={mode === "dark" ? "moon" : "sun"} />
@@ -210,7 +235,7 @@ function TopBar({ onPalette, onHelp, ui }: { onPalette: () => void; onHelp: () =
             { label: `${motionOff ? "✓ " : ""}Pause all motion`, onSelect: () => st.set({ motionOff: !motionOff }) },
             { type: "separator" as const },
             { type: "label", label: "Freeze selected component in a state" },
-            ...STATES.slice(0, 6).map((s) => ({ label: `${force.includes(s) ? "✓ " : ""}${s}`, onSelect: () => st.set({ force: force.includes(s) ? force.filter((x) => x !== s) : [...force, s as StateName] }) })),
+            ...STATES.slice(0, 6).map((s) => ({ label: `${force.includes(s) ? "✓ " : ""}${STATE_LABEL[s]}`, onSelect: () => st.set({ force: force.includes(s) ? force.filter((x) => x !== s) : [...force, s as StateName] }) })),
             ...(force.length ? [{ label: "Clear frozen states", onSelect: () => st.set({ force: [] }) }] : []),
             { type: "separator" as const },
             { label: "Open this page in a new tab", onSelect: () => window.open(page, "_blank") },

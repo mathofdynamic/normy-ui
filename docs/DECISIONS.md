@@ -82,3 +82,44 @@ These are decisions made autonomously while building. Each one is a candidate fo
 28. **Inline styles still appear in a few preview pages** for one-off structural layout (widths
     of filter controls, the auth split). They use tokens only. A follow-up could add
     `width`/`pad` props to the layout primitives and remove the rest.
+
+## Usability overhaul (2026-11-19, after first review)
+
+The first review said the Studio was "built for engineers": every option was visible at once, the
+interface was tiny, and nothing could be resized. These decisions answer that review.
+
+29. **The default look is black, white and one blue (OKLCH hue 264).** Registry colour defaults are
+    neutral with a faint cool cast. The brown/vermilion palette is gone from the default, the Studio
+    chrome and the Hub. Geist / Geist Mono replace Archivo / Plex as default families (both stay
+    available). Heading width defaults to 100%.
+30. **Progressive disclosure: Style → Edit → Advanced.** The Studio opens on the *Style* panel,
+    which has about 10 visual choices (starter, brand colour, neutrals, corners, spacing, type,
+    depth, lines, motion). Each choice is a named preset that expands to ordinary tokens for light
+    and dark (`components/studio/theme-model.ts`). Presets add no new engine concept, so they stay
+    undoable, exportable and fine-tunable ("Fine-tune" opens the exact tokens).
+31. **Plain-language scopes in the Edit panel.**
+    - Scope is chosen with "Every button / Only one style / Just this one" plus Part pills.
+    - The State tabs are Default / Hover / Pressed / Focus… and freeze the preview in that state.
+    - Breakpoint, mode and size sit behind "Only on…".
+    - Each component first shows about 20 *essential* properties (colour, shape, text, spacing,
+      depth, motion). "Show all N properties" and the search reach the rest.
+    - **Advanced** is the unchanged full cascade inspector, so nothing was removed.
+32. **Clicking a small control selects the whole control.** For buttons, inputs and feedback
+    components, a pick on a label or icon targets the root, because that is what people mean. Larger
+    blocks keep the clicked part. Advanced mode keeps the exact part.
+33. **Layout: one icon rail + one resizable panel + a large canvas.**
+    - The panel resizes by drag (280–760 px, double-click resets, arrow keys work) and can be
+      hidden.
+    - Interface size (Small 14 / Medium 16 / Large 18 px root) scales all chrome because chrome is
+      in rem.
+    - Both settings persist in localStorage (`normy:studio-ui`).
+34. **Canvas dock instead of toolbars.** A floating Select / Interact / Replay dock sits on the
+    canvas and shows what is being edited in words. Rarely used switches (motion speed, frozen
+    states, interface size) live in the ⋯ menu and the command palette.
+35. **What an edit touches is shown on the page.** The canvas outlines every element the current
+    scope affects (dashed) and labels the first one ("Every button · Hover"). The outlines follow
+    scroll.
+36. **First run shows a "pick a starting point" dialog** with live thumbnails of every starter.
+    It does not show again once dismissed, and "Welcome & tips" reopens it.
+37. **The Hub is a product landing page** (hero + product shot, how it works, starters, features,
+    pages). Engineering stats moved out of the hero.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Badge, Button, Card, CardBody, Heading, IconButton, Select, Text, useToast } from "@/components/normy";
+import { Badge, Button, Text, useToast } from "@/components/normy";
 import { diffSystems, type DiffEntry } from "@/engine/diff";
 import { EXPORT_FORMATS, exportSystem, type ExportFormat } from "@/engine/export";
 import { cloneSystem, parseSystem } from "@/engine/system";
@@ -158,119 +158,108 @@ export function SystemsPanel() {
   };
 
   return (
-    <div className="st-scroll" style={{ display: "flex", flexDirection: "column", gap: "var(--n-space-5)" }}>
-      <section>
-        <Heading variant="h5" as="h3">
-          This system
-        </Heading>
-        <Text variant="caption">
-          id <code>{system.meta.id}</code> · {savedId ? "on disk" : "not saved yet"} {dirty ? "· unsaved changes" : ""}
-        </Text>
-        <div className="st-stack" style={{ marginTop: "var(--n-space-2)" }}>
-          <input className="st-in" placeholder="Snapshot note (optional)" aria-label="Snapshot note" value={note} onChange={(e) => setNote(e.target.value)} />
-          <div className="st-row-ctl">
-            <Button size="sm" icon="download" onClick={doSave}>
-              Save
-            </Button>
-            <Button size="sm" variant="outline" onClick={doSaveAs}>
-              Save as…
-            </Button>
-            <Button size="sm" variant="ghost" icon="upload" onClick={() => file.current?.click()}>
-              Import
-            </Button>
-            <input ref={file} type="file" accept="application/json,.json" hidden onChange={(e) => e.target.files?.[0] && onImport(e.target.files[0])} />
+    <div className="st-lib">
+      <section className="st-card">
+        <div className="st-card-head">
+          <div>
+            <b>{system.meta.name}</b>
+            <small>
+              {savedId ? "Saved on disk" : "Not saved yet"}
+              {dirty ? " · unsaved changes" : ""} · id <code>{system.meta.id}</code>
+            </small>
           </div>
         </div>
+        <input className="st-in" placeholder="What changed? (optional note for this version)" aria-label="Snapshot note" value={note} onChange={(e) => setNote(e.target.value)} />
+        <div className="st-row-ctl st-wrap">
+          <button type="button" className="st-btn st-btn-primary" onClick={doSave}>
+            Save
+          </button>
+          <button type="button" className="st-btn st-btn-ghost" onClick={doSaveAs}>
+            Save as…
+          </button>
+          <button type="button" className="st-btn st-btn-ghost" onClick={() => file.current?.click()}>
+            Import JSON
+          </button>
+          <input ref={file} type="file" accept="application/json,.json" hidden onChange={(e) => e.target.files?.[0] && onImport(e.target.files[0])} />
+        </div>
+        <p className="st-note">Saving writes design-systems/{system.meta.id}/ and keeps a version you can return to.</p>
       </section>
 
-      <section>
-        <Heading variant="h5" as="h3">
-          Starter systems
-        </Heading>
-        <div className="st-stack" style={{ marginTop: "var(--n-space-2)" }}>
-          {STARTERS.map((s) => (
-            <button key={s.meta.id} type="button" className="st-item" data-active={system.meta.basedOn === s.meta.id || system.meta.id === s.meta.id ? "" : undefined} onClick={() => load(cloneSystem(s, { id: s.meta.id, name: s.meta.name }), null)}>
-              <span style={{ flex: 1 }}>
-                <b>{s.meta.name}</b>
-                <br />
-                <small style={{ color: "var(--n-color-text-subtle)" }}>{s.meta.description}</small>
-              </span>
-            </button>
-          ))}
+      <section className="st-sec st-sec-list">
+        <div className="st-sec-head">
+          <h3>Saved systems</h3>
+          <button type="button" className="st-link" onClick={refresh}>
+            Refresh
+          </button>
         </div>
-      </section>
-
-      <section>
-        <div className="st-row-ctl" style={{ justifyContent: "space-between" }}>
-          <Heading variant="h5" as="h3">
-            Saved on disk
-          </Heading>
-          <IconButton icon="refresh" label="Refresh list" size="sm" onClick={refresh} />
-        </div>
-        {list.length === 0 ? <p className="st-empty">Nothing saved yet. Save writes to design-systems/&lt;id&gt;/.</p> : null}
-        <div className="st-stack" style={{ marginTop: "var(--n-space-2)" }}>
-          {list.map((s) => (
-            <Card key={s.id} variant="outline" size="sm">
-              <CardBody>
-                <div className="st-row-ctl" style={{ justifyContent: "space-between" }}>
-                  <b style={{ color: "var(--n-color-text)" }}>{s.name}</b>
-                  <Badge size="sm">{s.versions} versions</Badge>
-                </div>
-                <small>
-                  {s.rules} rules · {s.tokens} tokens · {new Date(s.updatedAt).toLocaleString()}
-                </small>
-                <div className="st-row-ctl" style={{ marginTop: "var(--n-space-2)" }}>
-                  <Button size="xs" onClick={() => open(s.id)}>
-                    Load
-                  </Button>
-                  <Button size="xs" variant="outline" onClick={() => duplicate(s.id)}>
-                    Duplicate
-                  </Button>
-                  <Button size="xs" variant="ghost" onClick={() => remove(s.id)}>
-                    Delete
-                  </Button>
-                </div>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <Heading variant="h5" as="h3">
-          Versions &amp; diff
-        </Heading>
-        <div className="st-stack" style={{ marginTop: "var(--n-space-2)" }}>
-          {versions.slice(0, 12).map((v) => (
-            <div key={v.version} className="st-row-ctl">
-              <span className="st-mono" style={{ fontSize: "0.6875rem", flex: 1 }}>
-                {v.version.slice(0, 19)} {v.note ? `· ${v.note}` : ""}
-              </span>
-              <button type="button" className="st-mini" onClick={() => restore(v.version)}>
-                restore
+        {list.length === 0 ? <p className="st-empty">Nothing saved yet.</p> : null}
+        {list.map((s) => (
+          <div key={s.id} className="st-saved" data-active={s.id === system.meta.id ? "" : undefined}>
+            <div className="st-item-main">
+              <b>{s.name}</b>
+              <small>
+                {s.versions} versions · {s.rules} rules · {new Date(s.updatedAt).toLocaleString()}
+              </small>
+            </div>
+            <div className="st-row-ctl">
+              <button type="button" className="st-mini" onClick={() => open(s.id)}>
+                Open
+              </button>
+              <button type="button" className="st-mini" onClick={() => duplicate(s.id)}>
+                Duplicate
+              </button>
+              <button type="button" className="st-mini" onClick={() => remove(s.id)} aria-label={`Delete ${s.name}`}>
+                Delete
               </button>
             </div>
-          ))}
-          <div className="st-row-ctl">
-            <select className="st-in" aria-label="Compare against" value={diffA} onChange={(e) => setDiffA(e.target.value)}>
-              <option value="baseline">Last saved / loaded</option>
-              {versions.map((v) => (
-                <option key={v.version} value={`v:${v.version}`}>
-                  Version {v.version.slice(0, 19)}
-                </option>
-              ))}
-              {STARTERS.map((s) => (
-                <option key={s.meta.id} value={`s:${s.meta.id}`}>
-                  Starter: {s.meta.name}
-                </option>
-              ))}
-            </select>
-            <Button size="xs" variant="outline" onClick={runDiff}>
-              Diff
-            </Button>
           </div>
-          {diff ? <DiffList entries={diff} /> : null}
+        ))}
+      </section>
+
+      <section className="st-sec st-sec-list">
+        <div className="st-sec-head">
+          <h3>Versions of this system</h3>
         </div>
+        {versions.length === 0 ? <p className="st-empty">Versions appear here after you save.</p> : null}
+        {versions.slice(0, 12).map((v) => (
+          <div key={v.version} className="st-saved">
+            <div className="st-item-main">
+              <b>{v.note || "Snapshot"}</b>
+              <small>{v.version.slice(0, 19).replace("T", " ")}</small>
+            </div>
+            <button type="button" className="st-mini" onClick={() => restore(v.version)}>
+              Restore
+            </button>
+          </div>
+        ))}
+      </section>
+
+      <section className="st-sec">
+        <div className="st-sec-head">
+          <div>
+            <h3>What changed?</h3>
+            <p>Compare the current draft with a version or starter.</p>
+          </div>
+        </div>
+        <div className="st-row-ctl">
+          <select className="st-in" aria-label="Compare against" value={diffA} onChange={(e) => setDiffA(e.target.value)}>
+            <option value="baseline">Last saved / loaded</option>
+            {versions.map((v) => (
+              <option key={v.version} value={`v:${v.version}`}>
+                Version {v.version.slice(0, 19)}
+              </option>
+            ))}
+            {STARTERS.map((s) => (
+              <option key={s.meta.id} value={`s:${s.meta.id}`}>
+                Starter: {s.meta.name}
+              </option>
+            ))}
+          </select>
+          <button type="button" className="st-btn st-btn-ghost" onClick={runDiff}>
+            Compare
+          </button>
+        </div>
+        {diff ? <DiffList entries={diff} /> : null}
       </section>
     </div>
   );
@@ -285,14 +274,21 @@ export function ExportPanel() {
   const meta = EXPORT_FORMATS.find((f) => f.id === format)!;
   return (
     <div className="st-scroll" style={{ display: "flex", flexDirection: "column", gap: "var(--n-space-3)" }}>
-      <Select label="Format" required options={EXPORT_FORMATS.map((f) => ({ value: f.id, label: f.label }))} value={format} onValueChange={(v) => setFormat(v as ExportFormat)} size="sm" />
-      <div className="st-row-ctl">
-        <Button size="sm" icon="download" onClick={() => download(meta.file(system.meta.id), text)}>
-          Download {meta.file(system.meta.id)}
-        </Button>
-        <Button size="sm" variant="outline" icon="copy" onClick={() => navigator.clipboard?.writeText(text)}>
-          Copy
-        </Button>
+      <div className="st-formats" role="radiogroup" aria-label="Export format">
+        {EXPORT_FORMATS.map((f) => (
+          <button key={f.id} type="button" role="radio" aria-checked={format === f.id} className="st-tile" data-active={format === f.id ? "" : undefined} onClick={() => setFormat(f.id)}>
+            <span className="st-tile-label">{f.label}</span>
+            <span className="st-tile-hint">{f.file(system.meta.id)}</span>
+          </button>
+        ))}
+      </div>
+      <div className="st-row-ctl st-wrap">
+        <button type="button" className="st-btn st-btn-primary" onClick={() => download(meta.file(system.meta.id), text)}>
+          Download
+        </button>
+        <button type="button" className="st-btn st-btn-ghost" onClick={() => navigator.clipboard?.writeText(text)}>
+          Copy to clipboard
+        </button>
       </div>
       <Text variant="caption">
         {(text.length / 1024).toFixed(1)} KB · {text.split("\n").length} lines

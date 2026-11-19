@@ -13,6 +13,9 @@ import { replay } from "./motion";
 let inspectOn = false;
 let hoverBox: HTMLDivElement | null = null;
 let selBox: HTMLDivElement | null = null;
+const allBoxes: HTMLDivElement[] = [];
+let lastHighlight: Extract<ToCanvas, { type: "highlight" }>["target"] = null;
+const ACCENT = "#2563eb";
 let forced: HTMLElement[] = [];
 let lastPath = "";
 
@@ -25,8 +28,8 @@ function box(color: string, dashed = false): HTMLDivElement {
     position: "fixed",
     pointerEvents: "none",
     zIndex: "2147483600",
-    border: `1.5px ${dashed ? "dashed" : "solid"} ${color}`,
-    borderRadius: "2px",
+    border: `${dashed ? "1.5px dashed" : "2px solid"} ${color}`,
+    borderRadius: "3px",
     transition: "all 80ms ease-out",
     display: "none",
     boxShadow: `0 0 0 9999px transparent`,
@@ -38,10 +41,10 @@ function box(color: string, dashed = false): HTMLDivElement {
     bottom: "100%",
     background: color,
     color: "#fff",
-    font: "500 10px/1.6 ui-monospace, monospace",
-    padding: "0 5px",
+    font: "600 11px/1.7 system-ui, sans-serif",
+    padding: "0 6px",
     whiteSpace: "nowrap",
-    borderRadius: "2px 2px 0 0",
+    borderRadius: "4px 4px 0 0",
   });
   d.appendChild(tag);
   document.body.appendChild(d);
@@ -90,7 +93,7 @@ function info(root: Element, component: string, part?: string): PickedTarget {
 function onMove(e: PointerEvent) {
   if (!inspectOn) return;
   const t = targetOf(e.target as Element);
-  hoverBox ??= box("#2f6fed", true);
+  hoverBox ??= box(ACCENT, true);
   place(hoverBox, t?.el ?? null, t?.target.label);
 }
 
@@ -100,8 +103,7 @@ function onClick(e: MouseEvent) {
   e.stopPropagation();
   const t = targetOf(e.target as Element);
   if (!t) return;
-  selBox ??= box("#e8492b");
-  place(selBox, t.el, t.target.label);
+  // The Studio answers with a "highlight" for whatever it decides to edit.
   post({ type: "picked", target: t.target });
 }
 
@@ -139,13 +141,31 @@ function applyForce(msg: Extract<ToCanvas, { type: "force" }>) {
 }
 
 function highlight(t: Extract<ToCanvas, { type: "highlight" }>["target"]) {
-  selBox ??= box("#e8492b");
-  if (!t) return place(selBox, null);
-  let sel = t.instance ? `[data-n-id="${CSS.escape(t.instance)}"]` : t.component ? `[data-n="${CSS.escape(t.component)}"]` : "";
-  if (sel && t.part && t.component) sel += ` [data-n-part="${t.component}.${t.part}"]`;
-  const el = sel ? document.querySelector(sel) : null;
-  if (el) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  place(selBox, el, t.instance ? `#${t.instance}` : (t.component ?? ""));
+  lastHighlight = t;
+  selBox ??= box(ACCENT);
+  allBoxes.forEach((b) => place(b, null));
+  if (!t || !t.component) return place(selBox, null);
+  let sel = t.instance ? `[data-n-id="${CSS.escape(t.instance)}"]` : `[data-n="${CSS.escape(t.component)}"]${t.variant ? `[data-n-variant="${CSS.escape(t.variant)}"]` : ""}`;
+  if (t.part) sel += ` [data-n-part="${t.component}.${t.part}"]`;
+  const els = Array.from(document.querySelectorAll(sel)).filter((el) => {
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  });
+  const first = els.find((el) => {
+    const r = el.getBoundingClientRect();
+    return r.bottom > 0 && r.top < innerHeight;
+  }) ?? els[0] ?? null;
+  if (first && t.scroll) first.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  place(selBox, first, t.label ?? (t.instance ? `#${t.instance}` : t.component));
+  // Every other element this edit will touch gets a quiet outline.
+  els.filter((el) => el !== first).slice(0, 60).forEach((el, i) => {
+    allBoxes[i] ??= (() => {
+      const b = box("rgba(37, 99, 235, 0.55)", true);
+      (b.firstChild as HTMLElement).style.display = "none";
+      return b;
+    })();
+    place(allBoxes[i], el);
+  });
 }
 
 export function startAgent() {
@@ -189,9 +209,11 @@ export function startAgent() {
       setTimeout(sendInstances, 400);
     }
   }, 300);
+  let raf = 0;
   const onScroll = () => {
     if (hoverBox) place(hoverBox, null);
-    if (selBox) place(selBox, null);
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => lastHighlight && highlight({ ...lastHighlight, scroll: false }));
   };
   window.addEventListener("scroll", onScroll, { passive: true });
   return () => {

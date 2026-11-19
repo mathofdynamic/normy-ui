@@ -1,5 +1,7 @@
 /** Font families bundled via next/font (see app/fonts.ts). Values are CSS stacks usable as tokens. */
 export const FONT_OPTIONS: Array<{ label: string; value: string; kind: "sans" | "serif" | "mono" | "display" }> = [
+  { label: "Geist", value: "var(--font-geist), ui-sans-serif, sans-serif", kind: "sans" },
+  { label: "Geist Mono", value: "var(--font-geist-mono), ui-monospace, monospace", kind: "mono" },
   { label: "Archivo (wide grotesk)", value: "var(--font-archivo), ui-sans-serif, sans-serif", kind: "display" },
   { label: "IBM Plex Sans", value: "var(--font-plex-sans), ui-sans-serif, sans-serif", kind: "sans" },
   { label: "IBM Plex Mono", value: "var(--font-plex-mono), ui-monospace, monospace", kind: "mono" },

@@ -16,7 +16,7 @@ import { useStudio } from "./store";
  * its value comes from (set here / inherited from scope X / recipe).
  * ------------------------------------------------------------------ */
 
-const matchSearch = (d: PropertyDef, q: string) => {
+export const matchSearch = (d: PropertyDef, q: string) => {
   if (!q) return true;
   const hay = `${d.label} ${d.id} ${d.group} ${(d.keywords ?? []).join(" ")}`.toLowerCase();
   return q
@@ -108,7 +108,7 @@ function ScopeEditor() {
   );
 }
 
-const Row = memo(function Row({ def, ordered, scope, system }: { def: PropertyDef; ordered: OrderedRule[]; scope: Scope; system: DesignSystem }) {
+export const Row = memo(function Row({ def, ordered, scope, system }: { def: PropertyDef; ordered: OrderedRule[]; scope: Scope; system: DesignSystem }) {
   const setPropAt = useStudio((s) => s.setPropAt);
   const setScope = useStudio((s) => s.setScope);
   const here = findRule(system, scope)?.props[def.id];
@@ -144,7 +144,7 @@ const Row = memo(function Row({ def, ordered, scope, system }: { def: PropertyDe
   );
 });
 
-function TokenRow({ def, system }: { def: PropertyDef; system: DesignSystem }) {
+export function TokenRow({ def, system }: { def: PropertyDef; system: DesignSystem }) {
   const setTokenValue = useStudio((s) => s.setTokenValue);
   const light = system.tokens[def.id];
   const dark = system.dark[def.id];

@@ -25,7 +25,7 @@ engine/                         the Design Engine (framework-agnostic TS + a sma
 
 components/normy/               the library — structure + ARIA + behaviour only, no visual values
 components/runtime/             <NormyRuntime/> (applies the active system on every page except /studio)
-components/studio/              Studio: store (zustand), canvas, scope tree, inspector, controls, panels
+components/studio/              Studio: store (zustand), canvas, style panel + theme presets, edit panel, inspector (Advanced), controls, panels
 components/preview/             preview shells, content data, Atlas, Motion Lab, Analyzer
 components/site/hub.tsx         the showcase hub (/)
 

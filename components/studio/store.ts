@@ -15,6 +15,8 @@ export const DEVICES: Record<Device, { label: string; width: number | null }> = 
   fit: { label: "Fit", width: null },
 };
 
+export type Panel = "style" | "edit" | "pages" | "library" | "export" | "history";
+
 export interface HistoryEntry {
   system: DesignSystem;
   label: string;
@@ -40,6 +42,11 @@ export interface StudioState {
   search: string;
   rightTab: "inspect" | "systems" | "export" | "history";
   leftTab: "scope" | "pages" | "instances";
+  /** Which panel the rail shows. */
+  panel: Panel;
+  panelOpen: boolean;
+  /** Full cascade inspector instead of the simple editor. */
+  advanced: boolean;
   clipboard: { props: Props; from: string } | null;
   instances: Array<{ id: string; component: string; variant?: string }>;
   pageComponents: Record<string, string[]>;
@@ -82,6 +89,9 @@ export const useStudio = create<StudioState>((set, get) => ({
   search: "",
   rightTab: "inspect",
   leftTab: "scope",
+  panel: "style",
+  panelOpen: true,
+  advanced: false,
   clipboard: null,
   instances: [],
   pageComponents: {},

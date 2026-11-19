@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { FromCanvas, ToCanvas } from "@/engine/runtime/channel";
 import type { DesignSystem } from "@/engine/types";
+import { getComponent } from "@/engine/components";
+import { defaultPart, describeScope } from "./edit-panel";
 import { DEVICES, useStudio } from "./store";
 
 /** The system the canvas should render: transient motion overrides (speed / off) never touch the saved system. */
@@ -48,10 +50,12 @@ function Frame({ role, label }: { role: "current" | "baseline"; label?: string }
         send({ type: "inspect", on: st.inspect });
         const forceStates = st.force.length ? st.force : st.scope.state ? [st.scope.state] : [];
         send({ type: "force", states: forceStates, target: st.scope.component ? { component: st.scope.component, instance: st.scope.instance } : null });
+        const sc = st.scope;
+        send({ type: "highlight", target: sc.component && !st.advanced && st.panel === "edit" && st.panelOpen ? { component: sc.component, instance: sc.instance, part: sc.part, variant: sc.variant, label: describeScope(sc) } : null });
       }
     };
     const unsub = useStudio.subscribe((s, prev) => {
-      if (s.system === prev.system && s.baseline === prev.baseline && s.mode === prev.mode && s.inspect === prev.inspect && s.force === prev.force && s.scope === prev.scope && s.speed === prev.speed && s.motionOff === prev.motionOff) return;
+      if (s.system === prev.system && s.baseline === prev.baseline && s.mode === prev.mode && s.inspect === prev.inspect && s.force === prev.force && s.scope === prev.scope && s.advanced === prev.advanced && s.panel === prev.panel && s.panelOpen === prev.panelOpen && s.speed === prev.speed && s.motionOff === prev.motionOff) return;
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(push);
     });
@@ -73,9 +77,7 @@ function Frame({ role, label }: { role: "current" | "baseline"; label?: string }
       const m = e.data;
       const st = useStudio.getState();
       if (m.type === "ready") {
-        const st2 = useStudio.getState();
-        const st3 = st2;
-        if (m.path !== st3.page) st.set({ page: m.path });
+        if (m.path !== st.page) st.set({ page: m.path });
         setTimeout(() => {
           const s2 = useStudio.getState();
           send({ type: "system", system: canvasSystem(s2.system, s2.speed, s2.motionOff) });
@@ -85,8 +87,9 @@ function Frame({ role, label }: { role: "current" | "baseline"; label?: string }
       } else if (m.type === "instances") st.set({ instances: m.list, pageComponents: m.components });
       else if (m.type === "picked") {
         const t = m.target;
-        st.set({ picked: t, rightTab: "inspect" });
-        st.setScope({ component: t.component, part: t.part, instance: t.instance });
+        // Small controls (buttons, inputs…) are almost always meant as a whole; bigger blocks keep the clicked part.
+        st.set({ picked: t, panel: "edit", panelOpen: true });
+        st.setScope(st.advanced ? { component: t.component, part: t.part, instance: t.instance } : { component: t.component, part: defaultPart(getComponent(t.component), t.part) });
       }
     };
     window.addEventListener("message", onMsg);

@@ -66,6 +66,16 @@ review of those screenshots.
 - [x] PROPERTY-SPACE R4, final docs
 - [x] final typecheck + lint + screenshots
 
+## M-j Usability overhaul (after first review)
+- [x] black / white / blue identity (registry defaults, Studio chrome, Hub)
+- [x] Studio: rail + one resizable panel + canvas dock; interface size S/M/L; collapsible panel
+- [x] Style panel: starters, brand colour (presets + any colour), neutrals, corners, spacing, type, depth, lines, motion
+- [x] Edit panel: click-to-edit, plain-language scope, state tabs, essentials, all properties, Advanced = old inspector
+- [x] Library / Export / History restyled; first-run welcome; page picker in the top bar
+- [x] canvas outlines everything the current edit touches
+- [x] Hub rebuilt as a product landing page with a Studio product shot
+- [x] e2e rewritten for the new flow (13/13), typecheck + lint clean, screenshots regenerated
+
 ## Log
 - 2026-11-18: engine + 62 components render from data (smoke test light/dark OK, no console errors). Notes:
   hydration-safe motion runtime (no DOM attribute bookkeeping); stateful parts; overlay roots are display:contents wrappers.
@@ -77,3 +87,5 @@ review of those screenshots.
   (border-strong < 3:1), fixed in tokens. Mobile overflow fixed on table/inbox/checkout/app bar.
   Tailwind removed. Production build passes (28 routes). Studio e2e: 10/10 PASS.
   Final screenshot matrix: screenshots/final (pnpm screenshots).
+- 2026-11-19: Usability overhaul after first review (decisions 29–37). Studio rebuilt around
+  Style → Edit → Advanced, resizable/scalable chrome, black/white/blue identity, new Hub.

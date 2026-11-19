@@ -10,7 +10,7 @@ export type ToCanvas =
   | { type: "mode"; mode: ModePref }
   | { type: "inspect"; on: boolean }
   | { type: "force"; states: StateName[]; target: { component?: string; instance?: string } | null }
-  | { type: "highlight"; target: { component?: string; instance?: string; part?: string } | null }
+  | { type: "highlight"; target: { component?: string; instance?: string; part?: string; variant?: string; label?: string; scroll?: boolean } | null }
   | { type: "replay" }
   | { type: "scan" };
 

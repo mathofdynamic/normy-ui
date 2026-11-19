@@ -47,3 +47,6 @@ next-env.d.ts
 /screenshots/m-*/
 /screenshots/_systems/
 /screenshots/*.png
+
+# local dev server log
+/dev-server.log

@@ -1,7 +1,7 @@
 // Detects the "page loads twice" flash: samples the visible opacity of the first <h1>
 // on every animation frame, on first load and after a client-side navigation.
 // A flash = the heading is visible (≥0.9) and then drops to near-invisible (≤0.2) again.
-// Usage: URL=http://localhost:3001 node scripts/flash-check.mjs
+// Usage: URL=http://localhost:3001 [SLOW=3500] node scripts/flash-check.mjs
 import { launch } from "./launch-browser.mjs";
 
 const BASE = process.env.URL ?? "http://localhost:3100";
@@ -23,6 +23,9 @@ await ctx.addInitScript(() => {
   requestAnimationFrame(tick);
 });
 const p = await ctx.newPage();
+// SLOW=ms delays every JS chunk, like a dev server compiling on first visit.
+const SLOW = Number(process.env.SLOW ?? 0);
+if (SLOW) await p.route(/\/_next\/static\/.*\.js/, async (r) => { await new Promise((res) => setTimeout(res, SLOW)); await r.continue(); });
 
 function flashes(samples, path) {
   const s = samples.filter((x) => x.path === path);
@@ -37,7 +40,7 @@ function flashes(samples, path) {
 let fail = false;
 for (const path of ["/preview/saas", "/preview/pricing", "/", "/preview/app", "/preview/app/table", "/preview/blog"]) {
   await p.goto(BASE + path, { waitUntil: "load" });
-  await p.waitForTimeout(2500);
+  await p.waitForTimeout(2500 + SLOW);
   const r = flashes(await p.evaluate(() => window.__samples), path);
   console.log(`${r.flash ? "FLASH" : "ok   "}  first load ${path}  first=${r.first} last=${r.last ?? "-"} frames=${r.n}`);
   fail ||= r.flash;
@@ -49,7 +52,8 @@ for (const [from, to] of [["/preview/saas", "/preview/pricing"], ["/preview/pric
   await p.waitForTimeout(2000);
   await p.evaluate(() => (window.__samples.length = 0));
   await p.locator(`a[href="${to}"]`).first().click();
-  await p.waitForTimeout(2500);
+  await p.waitForURL(`**${to}`, { timeout: 30000 });
+  await p.waitForTimeout(2500 + SLOW);
   const r = flashes(await p.evaluate(() => window.__samples), to);
   console.log(`${r.flash ? "FLASH" : "ok   "}  navigate ${from} → ${to}  first=${r.first} last=${r.last ?? "-"} frames=${r.n}`);
   fail ||= r.flash;

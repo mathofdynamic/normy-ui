@@ -311,7 +311,11 @@ export function compile(system: DesignSystem, components: ComponentDef[], opts: 
 
   // Pre-paint hold: until the motion runtime takes over, entrance targets stay invisible
   // instead of flashing in fully drawn and then animating a second time.
-  if (manifest.enter.length) parts.push(`${manifest.enter.map((s) => `html[data-n-pre] :where(${s})`).join(",")}{opacity:0}`);
+  if (manifest.enter.length) {
+    parts.push(`${manifest.enter.map((s) => `html[data-n-pre] :where(${s})`).join(",")}{opacity:0}`);
+    // If the runtime is late, the boot script reveals with a soft fade instead of a pop.
+    parts.push(`@keyframes n-reveal{from{opacity:0}}${manifest.enter.map((s) => `html[data-n-reveal] :where(${s})`).join(",")}{animation:n-reveal .5s ease-out}`);
+  }
 
   const out = parts.join("\n");
   const ms = typeof performance !== "undefined" ? performance.now() - t0 : 0;

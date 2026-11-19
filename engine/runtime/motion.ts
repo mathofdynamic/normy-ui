@@ -211,10 +211,21 @@ function flush() {
   }
 }
 
+/**
+ * True when the page was already revealed before the runtime started (slow first load, e.g. a
+ * dev server compiling). Then elements on screen must not be hidden and re-animated: that reads
+ * as the page loading twice. Only content below the fold still animates as it scrolls in.
+ */
+let lateStart = false;
+const onScreen = (el: HTMLElement) => {
+  const r = el.getBoundingClientRect();
+  return r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth;
+};
+
 function observe(el: HTMLElement, c: EnterConfig) {
   if (observed.has(el)) return;
   observed.add(el);
-  if (c.trigger === "none") {
+  if (c.trigger === "none" || (lateStart && (c.trigger === "load" || onScreen(el)))) {
     entered.add(el);
     return;
   }
@@ -668,6 +679,8 @@ function behaviours(root: ParentNode) {
 export function startMotion() {
   if (started || typeof window === "undefined") return () => {};
   started = true;
+  const pre = (window as unknown as { __nPre?: string }).__nPre;
+  lateStart = pre === "expired" || (pre === undefined && !document.documentElement.hasAttribute("data-n-pre"));
   const rescan = () => {
     if (scanTimer) clearTimeout(scanTimer);
     scanTimer = setTimeout(() => scan(), 60);
@@ -694,6 +707,7 @@ export function startMotion() {
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", onScroll, { passive: true });
   scan();
+  lateStart = false; // only the first scan of a page load can be late
   return () => {
     started = false;
     offApply();

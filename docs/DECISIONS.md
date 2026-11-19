@@ -149,3 +149,9 @@ interface was tiny, and nothing could be resized. These decisions answer that re
       callback, before paint.
     - Safety timeout of 2.5 s; reduced motion skips the hold.
     - `scripts/flash-check.mjs` samples heading opacity on every frame to catch regressions.
+40. **Late runtime ⇒ reveal once, never re-animate.**
+    - If the page's JavaScript is slow (a dev server compiling), the boot script's hold expires
+      after 1.2 s and reveals content with a 0.5 s CSS fade.
+    - When the motion runtime then starts, it treats elements already on screen as entered.
+      Before this, it hid them again ("gray page") and re-ran their entrances.
+    - `SLOW=3500 node scripts/flash-check.mjs` reproduces this case.

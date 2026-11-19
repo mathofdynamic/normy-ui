@@ -1,8 +1,15 @@
-# Normy — design your UI visually
+# Normy — design it once, every agent builds it your way
 
-Normy is a studio for the look and feel of a product. Pick a style, click anything on a real page to
-refine it, and every page updates live. When you're happy, save versions and export real code (CSS,
-Tailwind v4, TypeScript or W3C design tokens).
+AI coding agents (Claude Code, Codex, Cursor…) build UI that looks fine page by page but drifts:
+different buttons, spacing and colours on every page, and rules you have to explain again each time.
+Normy fixes that in two halves:
+
+1. **A studio for the look.** Pick a style, click anything on a real page to refine it, and every page
+   updates live.
+2. **An Agent Kit for your agents.** One folder for your project: the real components and CSS, a design
+   skill written from your system and your rules, and checks the agent must pass before it may call a
+   page done. When you correct the agent, it records the lesson in the kit's review log; import that
+   log back into the Studio and every future project inherits it.
 
 ![The Normy Studio](public/studio-hero.png)
 
@@ -22,7 +29,8 @@ Open **`/studio`**. The first visit asks you to pick a starting look.
 | 1. Style | **Style** panel | Big choices, one click each: starter look, brand colour (or any colour), neutrals, corners, spacing, fonts, depth, motion. *Fine-tune* opens the exact tokens. |
 | 2. Edit | **Edit** panel, or **Select** in the canvas dock (shortcut **I**) | Click an element. Choose *Every button / Only one style / Just this one*, pick a state tab (Hover, Pressed…), and change its essentials. *Show all properties* has everything else. |
 | 3. Check | Top bar | Switch page, device (Phone/Tablet/Desktop/Fit) and light/dark. Compare shows before/after. |
-| 4. Save & export | **Save**, **Library**, **Export** | Versions on disk (`design-systems/<id>/`), restore, compare, import, and five export formats. |
+| 4. Guide | **Guide** panel | What the product is and how it should feel, rule packs (grid, readable text, motion, stable layout, craft, page kinds, proof), your own do/never rules, and the lessons log. |
+| 5. Save & export | **Save**, **Library**, **Export** | Versions on disk (`design-systems/<id>/`), restore, compare, import. **Export → Agent Kit** (recommended) or raw CSS, Tailwind v4, TypeScript, W3C tokens, JSON. |
 
 For experts, **Edit → Advanced** is the full cascade inspector: every scope (component, variant,
 size, part, instance, state, breakpoint, mode), all 263 properties and where each value comes from.
@@ -32,6 +40,26 @@ size (Small/Medium/Large) and **Hide** to give the canvas the whole width.
 
 **Keyboard.** **Ctrl/⌘ K** commands · **I** select mode · **Esc** interact · **Ctrl Z / Ctrl ⇧ Z**
 undo/redo · **Ctrl S** save. On preview pages, **Ctrl J** switches page and system.
+
+## The Agent Kit
+
+Download it from **Export**, or install it straight into a project from this repo:
+
+```bash
+pnpm kit <saved-system-id | starter-id | system.json> <path/to/project>
+```
+
+That writes `<project>/normy/` (keeping an existing `review-log.md`), adds an instruction block to
+`AGENTS.md` and `CLAUDE.md`, and installs the skill into `.claude/skills/` and `.agents/skills/`.
+
+| In the kit | What it does |
+|---|---|
+| `SKILL.md` | The contract, workflow, identity, rules, lessons. Generated from the system + Guide |
+| `references/` | Component catalogue with props and verified recipes, every token, setup, motion |
+| `components/`, `styles/`, `fonts.ts`, `provider.tsx` | The real React components, the compiled system CSS, fonts, motion runtime |
+| `scripts/check.mjs` | Static check, no dependencies: raw colours, Tailwind palette classes, foreign fonts, `transition: all`, truncated text, hand-rolled controls… |
+| `scripts/audit.mjs` | Rendered check (Playwright) at 375/1440 × light/dark: off-system colours, contrast, clipped text, overflow, layout shift; writes screenshots to look at |
+| `review-log.md` | Where agents record your corrections; import it back in **Guide → Lessons** |
 
 ## Other pages
 
@@ -48,6 +76,7 @@ undo/redo · **Ctrl S** save. On preview pages, **Ctrl J** switches page and sys
 ```bash
 pnpm check          # typecheck + lint
 pnpm e2e            # Studio end-to-end (own dev server on :3100)
+pnpm kit <system> <project>   # install / update an Agent Kit in a project
 pnpm screenshots    # all pages × 390/768/1440 × light/dark → screenshots/final
 pnpm build          # production build
 ```

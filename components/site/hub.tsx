@@ -62,7 +62,8 @@ function SystemPicker() {
 const STEPS = [
   { icon: "palette", title: "Pick a style", text: "Brand colour, fonts, corners, spacing, depth and motion — big visual choices, one click each." },
   { icon: "cursor", title: "Click to fine-tune", text: "Select any element on a real page. Change every button, one style, or just that one — in plain words." },
-  { icon: "upload", title: "Save & ship", text: "Keep versions, compare them, and export CSS, Tailwind, TypeScript or W3C design tokens." },
+  { icon: "wand", title: "Write the rules", text: "Say how it should feel, switch on proven rule packs, add your own do's and don'ts." },
+  { icon: "rocket", title: "Hand it to your agents", text: "Export the Agent Kit: components, a design skill and checks. Claude Code, Codex or Cursor build every page the same way." },
 ] as const;
 
 export function Hub() {
@@ -90,13 +91,13 @@ export function Hub() {
           <Stack gap={10} align="center">
             <Stack gap={6} align="center" style={{ maxWidth: "52rem", textAlign: "center" }}>
               <Badge variant="accent" dot="pulse">
-                Visual design-system studio
+                Design systems for AI-built apps
               </Badge>
               <Heading variant="h1" style={{ textAlign: "center" }}>
-                Design your UI visually. See it everywhere.
+                Design it once. Every agent builds it your way.
               </Heading>
               <Text variant="lead" style={{ textAlign: "center" }}>
-                Normy is a studio for the look and feel of your product. Choose a style, click anything to refine it, and watch every page update live — then export it as real code.
+                Shape your look visually, write down your taste, and hand both to your AI agents as one kit: real components, a design skill and checks they must pass. Every page comes out consistent, without explaining it again.
               </Text>
               <Row gap={3} wrap justify="center">
                 <Button size="lg" href="/studio" iconEnd="arrow-right" nid="hub-cta">
@@ -107,7 +108,7 @@ export function Hub() {
                 </Button>
               </Row>
               <Row gap={5} wrap justify="center">
-                {[`${COMPONENTS.length} components`, `${STARTERS.length} starter looks`, "Light & dark", "Runs locally"].map((t) => (
+                {[`${COMPONENTS.length} components`, `${STARTERS.length} starter looks`, "Agent Kit for any AI agent", "Light & dark"].map((t) => (
                   <Text key={t} variant="small" as="span">
                     <Icon name="check" variant="accent" /> {t}
                   </Text>
@@ -128,10 +129,10 @@ export function Hub() {
             <Stack gap={3} align="center">
               <Heading variant="eyebrow">How it works</Heading>
               <Heading variant="h2" style={{ textAlign: "center" }}>
-                From blank to branded in three moves.
+                From blank to a kit your agents follow.
               </Heading>
             </Stack>
-            <Grid cols={{ base: 1, md: 3 }} gap={6}>
+            <Grid cols={{ base: 1, md: 2, lg: 4 }} gap={6}>
               {STEPS.map((s, i) => (
                 <Feature key={s.title} variant="card" icon={s.icon} title={`${i + 1}. ${s.title}`}>
                   {s.text}

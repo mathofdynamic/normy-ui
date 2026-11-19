@@ -124,6 +124,31 @@ export interface DesignSystem {
   dark: Props;
   rules: Rule[];
   components: Record<string, ComponentConfig>;
+  /** How agents must design with this system (exported into the Agent Kit). */
+  guide?: Guide;
+}
+
+/* ---------------- guide (agent rules) ---------------- */
+
+export interface GuideRule {
+  id: string;
+  kind: "do" | "dont";
+  text: string;
+}
+
+export interface Guide {
+  /** What the product should feel like, in the owner's words. */
+  feel: string;
+  /** Who it is for / what it is (one or two sentences). */
+  product: string;
+  /** Enabled rule pack ids (see engine/guide.ts). */
+  packs: string[];
+  /** Owner's own rules. */
+  rules: GuideRule[];
+  /** Lessons learned from reviews (markdown, one "## " entry each). */
+  lessons: string;
+  /** Text direction / script notes, e.g. "Persian, RTL". */
+  language: string;
 }
 
 /* ---------------- registry ---------------- */

@@ -25,7 +25,11 @@ engine/                         the Design Engine (framework-agnostic TS + a sma
 
 components/normy/               the library — structure + ARIA + behaviour only, no visual values
 components/runtime/             <NormyRuntime/> (applies the active system on every page except /studio)
-components/studio/              Studio: store (zustand), canvas, style panel + theme presets, edit panel, inspector (Advanced), controls, panels
+components/studio/              Studio: store (zustand), canvas, style panel + theme presets, edit panel, guide panel, inspector (Advanced), controls, panels
+engine/guide.ts                 Guide model: rule packs, defaults, lessons parse/merge
+engine/kit/docs.ts              Agent Kit documents (SKILL.md, references, AGENTS block, checker config); pure
+lib/kit.ts, lib/zip.ts          Agent Kit builder (reads component sources, compiles CSS) + zip writer
+kit-template/                   Files copied verbatim into every kit (runtime shim, provider, boot, check.mjs, audit.mjs)
 components/preview/             preview shells, content data, Atlas, Motion Lab, Analyzer
 components/site/hub.tsx         the showcase hub (/)
 

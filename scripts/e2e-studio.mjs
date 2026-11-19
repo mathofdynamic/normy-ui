@@ -101,10 +101,12 @@ f = frame();
 const font = await f.locator("h1").first().evaluate((el) => getComputedStyle(el).fontFamily);
 ok(/jetbrains|mono/i.test(font), `starter applied to canvas (h1 font=${font.slice(0, 40)})`);
 
-// 9. Export panel renders CSS
+// 9. Export panel: Agent Kit preview + raw CSS
 await p.locator(".st-rail-btn", { hasText: "Export" }).click();
 await p.waitForTimeout(500);
-const code = await p.locator(".st-code").textContent();
+const skill = await p.locator(".st-kit pre").textContent();
+ok((skill ?? "").includes("## The contract"), "export panel previews the agent skill");
+const code = await p.locator(".st-code:not(.st-code-tall)").textContent();
 ok((code ?? "").includes("--n-color-accent"), "export panel produced CSS");
 
 ok(errors.length === 0, `no page errors (${errors.slice(0, 2).join(" | ")})`);

@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "check": "tsc --noEmit && eslint",
     "engine:check": "tsx scripts/check-engine.ts",
+    "kit": "tsx scripts/kit.ts",
     "e2e": "bash scripts/with-server.sh node scripts/e2e-studio.mjs",
     "screenshots": "bash scripts/with-server.sh node scripts/shoot-all.mjs"
   },

@@ -75,19 +75,52 @@ const r3 = (n: number) => Math.round(n * 1000) / 1000;
 const clamp = (n: number, a: number, b: number) => Math.min(b, Math.max(a, n));
 export const oklch = ({ l, c, h }: Lch, alpha?: number) => `oklch(${r3(l)} ${r3(c)} ${Math.round(h)}${alpha !== undefined ? ` / ${alpha}` : ""})`;
 
+/** Relative luminance (WCAG) of an OKLCH colour, gamut-clipped to sRGB. */
+export function luminance({ l, c, h }: Lch) {
+  const a = c * Math.cos((h * Math.PI) / 180);
+  const b = c * Math.sin((h * Math.PI) / 180);
+  const L = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const M = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const S = (l - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const cl = (v: number) => Math.min(1, Math.max(0, v));
+  const R = cl(4.0767416621 * L - 3.3077115913 * M + 0.2309699292 * S);
+  const G = cl(-1.2684380046 * L + 2.6097574011 * M - 0.3413193965 * S);
+  const B = cl(-0.0041960863 * L - 0.7034186147 * M + 1.707614701 * S);
+  return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+}
+const INK = "oklch(0.16 0.004 265)";
+const INK_Y = 0.0092;
+const vsWhite = (x: Lch) => 1.05 / (luminance(x) + 0.05);
+const vsInk = (x: Lch) => (luminance(x) + 0.05) / (INK_Y + 0.05);
+
+/** Make a fill usable for button labels: pick white or ink text, nudging lightness until AA (4.5:1) holds. */
+export function fitFill(x: Lch): { fill: Lch; on: string; hover: Lch } {
+  if (vsInk(x) > vsWhite(x)) {
+    let f = { ...x };
+    while (vsInk(f) < 4.5 && f.l < 0.98) f = { ...f, l: f.l + 0.01 };
+    return { fill: f, on: INK, hover: { ...f, l: clamp(f.l + 0.05, 0, 0.99) } };
+  }
+  let f = { ...x };
+  while (vsWhite(f) < 4.5 && f.l > 0.05) f = { ...f, l: f.l - 0.01 };
+  return { fill: f, on: "oklch(1 0 0)", hover: { ...f, l: clamp(f.l - 0.05, 0.05, 1) } };
+}
+
 /** Every accent role, derived from one brand colour. */
 export function brandPatch(base: Lch): TokenPatch {
   const mono = base.c < 0.02;
   const L = base.l;
-  const light: Lch = { ...base };
-  const hover: Lch = { ...base, l: clamp(L - 0.06, 0.08, 0.95) };
+  // Fills always keep AA contrast with their label (white or ink, whichever reads better).
+  const lightFit = fitFill(base);
+  const light: Lch = lightFit.fill;
+  const hover: Lch = lightFit.hover;
   const text: Lch = { ...base, l: Math.min(L, 0.52) };
   // Dark mode: lift light-ish so the accent still reads on near-black.
-  const dl: Lch = mono ? { l: 0.96, c: 0, h: 0 } : { ...base, l: clamp(L + 0.05, 0.6, 0.82), c: base.c * 0.93 };
-  const dHover: Lch = { ...dl, l: clamp(dl.l + 0.06, 0, 0.98) };
+  const darkFit = fitFill(mono ? { l: 0.96, c: 0, h: 0 } : { ...base, l: clamp(L + 0.05, 0.6, 0.82), c: base.c * 0.93 });
+  const dl: Lch = darkFit.fill;
+  const dHover: Lch = darkFit.hover;
   const dText: Lch = mono ? { l: 0.96, c: 0, h: 0 } : { ...base, l: Math.max(0.74, dl.l), c: base.c * 0.7 };
-  const onLight = L > 0.72 ? "oklch(0.16 0.004 265)" : "oklch(1 0 0)";
-  const onDark = dl.l > 0.72 ? "oklch(0.16 0.004 265)" : "oklch(1 0 0)";
+  const onLight = lightFit.on;
+  const onDark = darkFit.on;
   return P(
     {
       "color.accent": oklch(light),

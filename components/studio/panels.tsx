@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Badge, Button, Text, useToast } from "@/components/normy";
 import { diffSystems, type DiffEntry } from "@/engine/diff";
+import { agentsBlock, kitInfo, reviewLogMd, skillMd } from "@/engine/kit/docs";
+import { guideOf, enabledPacks } from "@/engine/guide";
 import { EXPORT_FORMATS, exportSystem, type ExportFormat } from "@/engine/export";
 import { cloneSystem, parseSystem } from "@/engine/system";
 import { STARTERS } from "@/engine/systems";
@@ -267,7 +269,110 @@ export function SystemsPanel() {
 
 /* ---------------- Export panel ---------------- */
 
+const SETUP_PROMPT = `I added a design kit to this project: the folder ./normy (unzipped from Normy). Set it up:
+1. Add the block in normy/AGENTS.snippet.md to AGENTS.md and to CLAUDE.md (create them if missing).
+2. Copy every folder in normy/skills/ into .claude/skills/ and .agents/skills/.
+3. Install the dependencies listed in normy/README.md (and playwright as a dev dependency for the audit).
+4. Wire the kit into the app exactly as normy/references/setup.md describes.
+5. Run node normy/scripts/check.mjs and report what it finds.
+From now on, follow normy/SKILL.md for all UI work.`;
+
+type KitDoc = "skill" | "agents" | "log";
+
+function AgentKit() {
+  const system = useStudio((s) => s.system);
+  const set = useStudio((s) => s.set);
+  const [doc, setDoc] = useState<KitDoc>("skill");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [copied, setCopied] = useState(false);
+  const g = guideOf(system);
+  const info = kitInfo(system);
+  const text = doc === "skill" ? skillMd(system) : doc === "agents" ? agentsBlock(system) : reviewLogMd(system);
+  const get = async () => {
+    setBusy(true);
+    setErr("");
+    try {
+      const r = await fetch("/api/kit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ system }) });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error ?? `HTTP ${r.status}`);
+      const blob = await r.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${info.slug}-agent-kit.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="st-card st-kit" data-testid="agent-kit">
+      <div className="st-card-head">
+        <b>Agent Kit</b>
+        <small>Recommended · for Claude Code, Codex, Cursor and any AI agent</small>
+      </div>
+      <p className="st-note">
+        One folder for your project: the components, the styles, a design skill written from this system and your Guide, and checks the agent must pass before it
+        says a page is done.
+      </p>
+      <ul className="st-kit-list">
+        <li><b>SKILL.md</b> — how to design with {system.meta.name}: rules, identity, workflow</li>
+        <li><b>Components + CSS</b> — {g.rules.length ? `${g.rules.length} rule${g.rules.length === 1 ? "" : "s"} of your own, ` : ""}{enabledPacks(g).length} rule packs, every component</li>
+        <li><b>check + audit</b> — catch raw colours, cut-off text, low contrast, off-system styles</li>
+        <li><b>review-log.md</b> — where agents record your corrections</li>
+      </ul>
+      <div className="st-row-ctl st-wrap">
+        <button type="button" className="st-btn st-btn-primary" onClick={() => void get()} disabled={busy}>
+          {busy ? "Building…" : "Download Agent Kit (.zip)"}
+        </button>
+        <button
+          type="button"
+          className="st-btn st-btn-ghost"
+          onClick={() => {
+            void navigator.clipboard?.writeText(SETUP_PROMPT);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1600);
+          }}
+        >
+          {copied ? "Copied" : "Copy setup prompt"}
+        </button>
+        <button type="button" className="st-link" onClick={() => set({ panel: "guide" })}>
+          Edit the Guide
+        </button>
+      </div>
+      {err ? <p className="st-note" role="alert">Could not build the kit: {err}</p> : null}
+      <ol className="st-steps-list">
+        <li>Unzip it in your project root, so you get a <code>normy/</code> folder.</li>
+        <li>Paste the setup prompt into your agent. It wires everything in.</li>
+        <li>Build as usual. When you correct a design, the agent writes the lesson down; import it back in the Guide.</li>
+      </ol>
+      <div className="st-seg st-seg-sm" role="tablist" aria-label="Preview kit file">
+        {([["skill", "SKILL.md"], ["agents", "AGENTS.md block"], ["log", "review-log.md"]] as const).map(([id, label]) => (
+          <button key={id} type="button" role="tab" aria-selected={doc === id} data-active={doc === id ? "" : undefined} onClick={() => setDoc(id)}>
+            {label}
+          </button>
+        ))}
+      </div>
+      <pre className="st-code st-code-tall">{text}</pre>
+    </div>
+  );
+}
+
 export function ExportPanel() {
+  return (
+    <div className="st-scroll" style={{ display: "flex", flexDirection: "column", gap: "var(--n-space-3)" }}>
+      <AgentKit />
+      <h3 className="st-list-title">Other formats</h3>
+      <RawExport />
+    </div>
+  );
+}
+
+function RawExport() {
   const system = useStudio((s) => s.system);
   const [format, setFormat] = useState<ExportFormat>("css");
   const text = exportSystem(system, format);

@@ -239,7 +239,7 @@ export const switchDef = define({
     part("description", { fontSize: "{text.xs}", color: "{color.text-muted}" }),
     part("track", { ...motion, transitionDuration: "{duration.base}", position: "relative", display: "inline-flex", alignItems: "center", flexShrink: 0, width: "3rem", height: "1.5rem", padding: "2px", radius: "{radius.full}", borderWidth: "{border.thin}", borderStyle: "solid", borderColor: "{color.border-strong}", bg: "{color.surface-sunken}", cursor: "pointer" }),
     part("thumb", { ...motion, transitionDuration: "{duration.base}", transitionEasing: "{easing.spring}", size: "1.125rem", radius: "{radius.full}", bg: "{color.surface-raised}", borderWidth: "{border.thin}", borderStyle: "solid", borderColor: "{color.border-strong}", shadow: "{shadow.2}", position: "relative", zIndex: 1 }),
-    part("mark", { position: "absolute", top: 0, bottom: 0, display: "flex", alignItems: "center", fontFamily: "{font.mono}", fontSize: "0.6875rem", lineHeight: 1, right: "0.5rem", color: "{color.text-subtle}", pointerEvents: "none" }),
+    part("mark", { position: "absolute", top: 0, bottom: 0, display: "flex", alignItems: "center", fontFamily: "{font.mono}", fontSize: "{text.xs}", lineHeight: 1, right: "0.5rem", color: "{color.text-subtle}", pointerEvents: "none" }),
     R({ variant: "default", part: "mark" }, { display: "none" }),
     R({ state: "selected", part: "track" }, { bg: "{color.accent}", borderColor: "{color.accent}" }),
     R({ state: "selected", part: "thumb" }, { translateX: "1.5rem", bg: "{color.text-on-accent}", borderColor: "transparent" }),

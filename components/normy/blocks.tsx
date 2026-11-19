@@ -14,7 +14,9 @@ export interface HeroProps extends NProps {
   variant?: "split" | "centered" | "editorial" | (string & {});
 }
 
-export function Hero({ variant = "split", nid, eyebrow, title, lead, actions, meta, media }: HeroProps) {
+export function Hero({ variant, nid, eyebrow, title, lead, actions, meta, media }: HeroProps) {
+  // A split hero needs a visual; without one, centre the copy instead of leaving half the screen empty.
+  variant ??= media ? "split" : "centered";
   return (
     <section {...nRoot("hero", { variant, nid })}>
       <div {...nPart("hero", "inner")}>

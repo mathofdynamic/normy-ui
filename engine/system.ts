@@ -12,6 +12,7 @@ export function createSystem(meta: Partial<DesignSystem["meta"]> & { id: string;
     dark: rest.dark ?? {},
     rules: (rest.rules ?? []).map((r) => ({ ...r, id: r.id || scopeKey(r.scope), scope: normalizeScope(r.scope) })),
     components: rest.components ?? {},
+    ...(rest.guide ? { guide: rest.guide } : {}),
   };
 }
 
@@ -80,6 +81,6 @@ export function parseSystem(input: unknown): DesignSystem {
   if (!s || typeof s !== "object" || !s.meta || typeof s.meta.id !== "string") throw new Error("Not a Normy design system (missing meta.id).");
   return createSystem(
     { ...s.meta, id: s.meta.id, name: s.meta.name ?? s.meta.id },
-    { tokens: s.tokens ?? {}, dark: s.dark ?? {}, rules: Array.isArray(s.rules) ? s.rules : [], components: s.components ?? {} },
+    { tokens: s.tokens ?? {}, dark: s.dark ?? {}, rules: Array.isArray(s.rules) ? s.rules : [], components: s.components ?? {}, guide: s.guide && typeof s.guide === "object" ? s.guide : undefined },
   );
 }

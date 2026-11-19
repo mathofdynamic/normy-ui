@@ -155,3 +155,23 @@ interface was tiny, and nothing could be resized. These decisions answer that re
     - When the motion runtime then starts, it treats elements already on screen as entered.
       Before this, it hid them again ("gray page") and re-ran their entrances.
     - `SLOW=3500 node scripts/flash-check.mjs` reproduces this case.
+41. **The product is consistency for AI-built apps; the export that matters is the Agent Kit.**
+    - Tokens alone do not stop agents drifting. Skills alone only load when their description
+      matches, get forgotten on long tasks, and agents approve their own work.
+    - So the kit layers: rules written in the Studio (Guide) → the real components in the project →
+      an always-loaded block in AGENTS.md/CLAUDE.md pointing at a generated SKILL.md →
+      enforcement (`check.mjs` static, `audit.mjs` rendered + screenshots) → a review log the agent
+      appends to, imported back into the Studio.
+    - Rule packs are distilled from the luma-taste skill's owner reviews, minus Luma-specific
+      identity. Three packs (use the system, consistency, proof) are always on.
+42. **The kit ships the real components, not a description of them.** Component sources are
+    copied with two import rewrites (`@/engine/react` → `../react`, `next/link` → `../link`); the
+    motion runtime gets a static manifest through a small `apply` shim. Verified by installing the kit
+    into a fresh Next.js 16 app, building it, and passing check + audit.
+43. **The catalogue teaches compositions.** A prop list let an agent put text straight into `<Card>`
+    and use a split Hero without media. The catalogue now lists companion parts (CardHeader…) and
+    verified recipes; Hero defaults to `centered` when no media is given.
+44. **The system must pass its own audit.** The kit audit found the default dark accent at 4.1:1
+    against white labels and 11px labels in 14 recipes. Dark accent is now `oklch(0.57 0.2 264)`
+    (4.6:1), brand presets pick label colour and lightness by measured contrast (`fitFill`), and
+    the labels use `{text.xs}` (12px).

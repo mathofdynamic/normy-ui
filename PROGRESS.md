@@ -76,6 +76,16 @@ review of those screenshots.
 - [x] Hub rebuilt as a product landing page with a Studio product shot
 - [x] e2e rewritten for the new flow (13/13), typecheck + lint clean, screenshots regenerated
 
+## M-k Agent Kit (the purpose: consistent UI from AI agents)
+- [x] Guide in the system (feel, product, language, rule packs, own rules, lessons) + Studio Guide panel
+- [x] Kit generator: SKILL.md, references (components + recipes, tokens, setup, motion), AGENTS block, review log, checker config
+- [x] Kit code: components, compiled CSS, next/font fonts, motion runtime shim, provider, boot script
+- [x] `check.mjs` (static) and `audit.mjs` (rendered, screenshots)
+- [x] Export → Agent Kit (zip via /api/kit), `pnpm kit <system> <project>` installer
+- [x] Proof: fresh Next.js app builds with the kit; good page passes check + audit, planted bad page fails both
+- [x] System fixes found by the audit (dark accent contrast, 11px labels, centred Hero)
+- [x] e2e 14/14, kit UI check 10/10, flash check 10/10, typecheck + lint clean
+
 ## Log
 - 2026-11-18: engine + 62 components render from data (smoke test light/dark OK, no console errors). Notes:
   hydration-safe motion runtime (no DOM attribute bookkeeping); stateful parts; overlay roots are display:contents wrappers.

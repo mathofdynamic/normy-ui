@@ -1,0 +1,20 @@
+/*
+ * Everything visual comes from the Normy engine (<style id="normy-engine">).
+ * This file only holds document-level resets that no design system should change.
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+img,
+svg,
+video {
+  max-width: 100%;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

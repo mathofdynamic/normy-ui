@@ -50,3 +50,8 @@ next-env.d.ts
 
 # local dev server log
 /dev-server.log
+
+# Agent Kit test projects and downloads
+/.kit-test/
+/screenshots/kit/kit.zip
+/normy-audit/

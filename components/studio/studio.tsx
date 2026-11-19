@@ -16,6 +16,7 @@ import { STATES, type StateName } from "@/engine/types";
 import { Canvas } from "./canvas";
 import { describeScope, EditPanel, STATE_LABEL } from "./edit-panel";
 import { ExportPanel, HistoryPanel, saveCurrent, SystemsPanel } from "./panels";
+import { GuidePanel } from "./guide-panel";
 import { StylePanel } from "./style-panel";
 import { DEVICES, useStudio, type Device, type Panel } from "./store";
 import { SystemThumb } from "./system-thumb";
@@ -260,8 +261,9 @@ const RAIL: Array<{ id: Panel; label: string; icon: Parameters<typeof Icon>[0]["
   { id: "style", label: "Style", icon: "palette", hint: "Colours, type, shape, depth, motion" },
   { id: "edit", label: "Edit", icon: "cursor", hint: "Click anything and change it" },
   { id: "pages", label: "Pages", icon: "layout", hint: "Preview your system on real pages" },
+  { id: "guide", label: "Guide", icon: "wand", hint: "The rules your AI agents follow" },
   { id: "library", label: "Library", icon: "layers", hint: "Saved systems, versions, import" },
-  { id: "export", label: "Export", icon: "upload", hint: "CSS, Tailwind, TypeScript, tokens" },
+  { id: "export", label: "Export", icon: "upload", hint: "Agent Kit for your AI agents, plus CSS, Tailwind, tokens" },
   { id: "history", label: "History", icon: "clock", hint: "Every change, jump back to any" },
 ];
 
@@ -362,11 +364,11 @@ function PanelHost({ width, setWidth }: { width: number; setWidth: (w: number) =
   return (
     <aside className="st-panel" ref={ref} style={{ width }} aria-label={`${panel} panel`}>
       <div className="st-panel-scroll" key={panel}>
-        {panel === "style" ? <StylePanel /> : panel === "edit" ? <EditPanel /> : panel === "pages" ? <PagesPanel /> : (
+        {panel === "style" ? <StylePanel /> : panel === "edit" ? <EditPanel /> : panel === "pages" ? <PagesPanel /> : panel === "guide" ? <GuidePanel /> : (
           <div className="st-panel-body">
             <div className="st-panel-intro">
               <h2>{panel === "library" ? "Library" : panel === "export" ? "Export" : "History"}</h2>
-              <p>{panel === "library" ? "Save systems to disk, keep versions, compare and import." : panel === "export" ? "Use your system anywhere: pick a format, copy or download." : "Every change you made. Click one to go back to just before it."}</p>
+              <p>{panel === "library" ? "Save systems to disk, keep versions, compare and import." : panel === "export" ? "Hand your system to your AI agents with the Agent Kit, or take the raw formats." : "Every change you made. Click one to go back to just before it."}</p>
             </div>
             <div className="st-legacy">{panel === "library" ? <SystemsPanel /> : panel === "export" ? <ExportPanel /> : <HistoryPanel />}</div>
           </div>
@@ -507,7 +509,8 @@ function Palette({ open, setOpen }: { open: boolean; setOpen: (o: boolean) => vo
       { id: "redo", group: "System", label: "Redo", icon: "arrow-right", onSelect: () => st().redo() },
       { id: "style", group: "Go to", label: "Style: colours, fonts, corners…", icon: "palette", onSelect: () => go("style") },
       { id: "edit", group: "Go to", label: "Edit components", icon: "cursor", onSelect: () => go("edit") },
-      { id: "export", group: "Go to", label: "Export…", icon: "upload", onSelect: () => go("export") },
+      { id: "guide", group: "Go to", label: "Guide: rules for AI agents", icon: "wand", onSelect: () => go("guide") },
+      { id: "export", group: "Go to", label: "Export / Agent Kit…", icon: "upload", onSelect: () => go("export") },
       { id: "systems", group: "Go to", label: "Library: saved systems & versions", icon: "layers", onSelect: () => go("library") },
       { id: "history", group: "Go to", label: "History", icon: "clock", onSelect: () => go("history") },
       { id: "advanced", group: "Go to", label: "Advanced inspector (full cascade)", icon: "sliders", onSelect: () => st().set({ panel: "edit", panelOpen: true, advanced: true }) },

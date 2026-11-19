@@ -15,7 +15,7 @@ export const DEVICES: Record<Device, { label: string; width: number | null }> = 
   fit: { label: "Fit", width: null },
 };
 
-export type Panel = "style" | "edit" | "pages" | "library" | "export" | "history";
+export type Panel = "style" | "edit" | "pages" | "guide" | "library" | "export" | "history";
 
 export interface HistoryEntry {
   system: DesignSystem;

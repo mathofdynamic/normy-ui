@@ -23,12 +23,18 @@ export function Brand({ name = "Lumen" }: { name?: string }) {
 
 /* ---------------- page transition (reads motion.page-* tokens) ---------------- */
 
+/*
+ * Page effects never take the page to invisible: starting from opacity 0 showed one empty grey
+ * frame on every navigation, and the persistent header and sidebar blinked with it. The effect
+ * now moves only the page's <main> (navigation stays put) and keeps it readable throughout; the
+ * sections inside still play their own entrances, so the page is revealed exactly once.
+ */
 const PAGE_FX: Record<string, Keyframe[]> = {
-  fade: [{ opacity: 0 }, { opacity: 1 }],
-  rise: [{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }],
-  slide: [{ opacity: 0, transform: "translateX(24px)" }, { opacity: 1, transform: "none" }],
-  zoom: [{ opacity: 0, transform: "scale(0.985)" }, { opacity: 1, transform: "none" }],
-  blur: [{ opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "none" }],
+  fade: [{ opacity: 0.85 }, { opacity: 1 }],
+  rise: [{ opacity: 0.85, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }],
+  slide: [{ opacity: 0.85, transform: "translateX(16px)" }, { opacity: 1, transform: "none" }],
+  zoom: [{ opacity: 0.85, transform: "scale(0.992)" }, { opacity: 1, transform: "none" }],
+  blur: [{ opacity: 0.85, filter: "blur(3px)" }, { opacity: 1, filter: "none" }],
 };
 
 export function PageTransition({ children }: { children: ReactNode }) {
@@ -48,7 +54,8 @@ export function PageTransition({ children }: { children: ReactNode }) {
     if (fx === "none" || !PAGE_FX[fx]) return;
     const dur = parseFloat(cs.getPropertyValue("--n-motion-page-duration")) || 360;
     const easing = cs.getPropertyValue("--n-motion-page-easing").trim() || "ease-out";
-    el.animate(PAGE_FX[fx], { duration: dur / motionSpeed(), easing });
+    const target = el.querySelector<HTMLElement>("main") ?? el;
+    target.animate(PAGE_FX[fx], { duration: dur / motionSpeed(), easing });
   }, [path]);
   return (
     <div ref={ref} data-n-page="">
@@ -98,9 +105,19 @@ export function PreviewToolbar() {
 }
 
 export function PreviewFrame({ children }: { children: ReactNode }) {
+  const router = useRouter();
   useEffect(() => {
     if (window.parent === window) applyMode(storedMode(), false);
   }, []);
+  // The Studio switches canvas pages through the router, like a visitor clicking a link.
+  useEffect(() => {
+    const onNav = (e: Event) => {
+      e.preventDefault();
+      router.push((e as CustomEvent<string>).detail);
+    };
+    window.addEventListener("normy:navigate", onNav);
+    return () => window.removeEventListener("normy:navigate", onNav);
+  }, [router]);
   return (
     <Toaster>
       <PageTransition>{children}</PageTransition>

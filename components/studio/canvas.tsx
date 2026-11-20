@@ -21,6 +21,11 @@ function Frame({ role, label }: { role: "current" | "baseline"; label?: string }
   const page = useStudio((s) => s.page);
   const device = useStudio((s) => s.device);
   const width = DEVICES[device].width;
+  // The iframe keeps the page it was created with; later page changes navigate inside it
+  // (client-side) so the canvas never reloads to a blank frame. Until the frame reports
+  // "ready" a page change just swaps the src.
+  const [srcPage, setSrcPage] = useState(page);
+  const framePath = useRef<string | null>(null);
 
   // Fit the device width into the available stage.
   useEffect(() => {
@@ -69,12 +74,20 @@ function Frame({ role, label }: { role: "current" | "baseline"; label?: string }
     };
   }, [role]);
 
+  // Page changes from the Studio → navigate inside the frame.
+  useEffect(() => {
+    if (page === framePath.current) return;
+    if (framePath.current === null) setSrcPage(page);
+    else send({ type: "navigate", path: page });
+  }, [page]);
+
   // Messages from the iframe.
   useEffect(() => {
-    if (role !== "current") return;
     const onMsg = (e: MessageEvent<FromCanvas>) => {
       if (e.origin !== location.origin || e.source !== ref.current?.contentWindow) return;
       const m = e.data;
+      if (m.type === "ready") framePath.current = m.path;
+      if (role !== "current") return;
       const st = useStudio.getState();
       if (m.type === "ready") {
         if (m.path !== st.page) st.set({ page: m.path });
@@ -110,7 +123,7 @@ function Frame({ role, label }: { role: "current" | "baseline"; label?: string }
 
   const w = width ?? avail.w;
   const h = width ? avail.h / scale - 4 : avail.h - 4;
-  const src = `${page}${page.includes("?") ? "&" : "?"}studio=1`;
+  const src = srcPage;
   return (
     <div className="st-frame-wrap" ref={box}>
       {label ? <span className="st-frame-label">{label}</span> : null}

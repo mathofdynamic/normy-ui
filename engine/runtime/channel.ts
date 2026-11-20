@@ -12,7 +12,9 @@ export type ToCanvas =
   | { type: "force"; states: StateName[]; target: { component?: string; instance?: string } | null }
   | { type: "highlight"; target: { component?: string; instance?: string; part?: string; variant?: string; label?: string; scroll?: boolean } | null }
   | { type: "replay" }
-  | { type: "scan" };
+  | { type: "scan" }
+  /** Client-side navigation inside the canvas (no iframe reload, so no blank frame). */
+  | { type: "navigate"; path: string };
 
 export interface PickedTarget {
   component: string;

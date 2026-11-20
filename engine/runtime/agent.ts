@@ -197,6 +197,12 @@ export function startAgent() {
       case "scan":
         sendInstances();
         break;
+      case "navigate": {
+        // The preview layout (which owns the Next router) handles this; anything else reloads.
+        const ev = new CustomEvent("normy:navigate", { detail: m.path, cancelable: true });
+        if (window.dispatchEvent(ev)) location.assign(m.path);
+        break;
+      }
     }
   };
   window.addEventListener("message", onMessage);

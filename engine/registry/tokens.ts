@@ -254,6 +254,9 @@ export const MOTION_TOKENS: PropertyDef[] = [
   tok("motion.page-effect", "Page transition", "motion-tokens", sel("none", "fade", "rise", "slide", "zoom", "blur"), "fade"),
   tok("motion.page-duration", "Page duration", "motion-tokens", time, 360),
   tok("motion.page-easing", "Page easing", "motion-tokens", easing, ez([0.22, 1, 0.36, 1])),
+  tok("motion.loop-speed", "Loop speed (all loops)", "motion-tokens", num(0.1, 4, 0.05, "×"), 1, {
+    description: "Multiplies the speed of every loop component and ambient loop. 0.5 = everything loops half as fast.",
+  }),
 ];
 
 /* ---------------- breakpoints & a11y ---------------- */

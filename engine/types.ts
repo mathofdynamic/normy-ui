@@ -177,6 +177,8 @@ export type GroupId =
   | "content"
   | "transition"
   | "enter"
+  | "presence"
+  | "loop"
   | "fx"
   | "scroll"
   | "ambient"
@@ -269,7 +271,8 @@ export type Category =
   | "overlay"
   | "feedback"
   | "media"
-  | "blocks";
+  | "blocks"
+  | "loops";
 
 export interface RecipeRule {
   scope: Omit<Scope, "component">;
@@ -291,4 +294,6 @@ export interface ComponentDef {
   defaultVariant?: string;
   defaultSize?: string;
   recipe: RecipeRule[];
+  /** Raw @keyframes this component's recipe animates (loops). Emitted once into the engine header. */
+  keyframes?: string;
 }

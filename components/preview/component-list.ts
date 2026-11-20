@@ -15,4 +15,5 @@ export const CATS: Array<{ id: Category; label: string }> = [
   { id: "feedback", label: "Feedback" },
   { id: "media", label: "Media & motion" },
   { id: "blocks", label: "Blocks" },
+  { id: "loops", label: "Loops" },
 ];

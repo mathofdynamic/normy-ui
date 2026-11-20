@@ -125,7 +125,7 @@ export const select = define({
     R({ state: "hover", part: "trigger" }, { borderColor: "{color.text-subtle}" }),
     R({ state: "focus", part: "trigger" }, { borderColor: "{color.accent}", shadow: "{shadow.halo}" }),
     R({ state: "open", part: "icon" }, { rotate: 180 }),
-    part("content", { "animation-name": "n-pop-in", "animation-duration": "calc(var(--n-duration-base) / var(--n-motion-speed, 1))", "animation-timing-function": "var(--n-easing-enter)", zIndex: "{z.dropdown}", bg: "{color.surface-raised}", borderWidth: "{border.thin}", borderStyle: "solid", borderColor: "{color.border}", radius: "{radius.md}", shadow: "{shadow.4}", overflow: "hidden", minWidth: "var(--radix-select-trigger-width)", maxHeight: "var(--radix-select-content-available-height)", ambientEffect: "none" }),
+    part("content", { openEffect: "pop", openDuration: "{duration.base}", zIndex: "{z.dropdown}", bg: "{color.surface-raised}", borderWidth: "{border.thin}", borderStyle: "solid", borderColor: "{color.border}", radius: "{radius.md}", shadow: "{shadow.4}", overflow: "hidden", minWidth: "var(--radix-select-trigger-width)", maxHeight: "var(--radix-select-content-available-height)", ambientEffect: "none" }),
     part("viewport", { padding: "{space.1}" }),
     part("item", { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "{space.3}", height: "{size.control-sm}", paddingX: "{space.2-5}", radius: "{radius.sm}", fontSize: "{text.sm}", color: "{color.text}", cursor: "pointer", outlineStyle: "none", userSelect: "none" }),
     R({ part: "item", state: "hover" }, { bg: "{color.surface-sunken}" }),

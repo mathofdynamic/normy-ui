@@ -453,6 +453,90 @@ const ENTER: PropertyDef[] = [
   M("enterThreshold", "In-view threshold", "enter", num(0, 1, 0.05), "--n-enter-threshold"),
   M("enterMargin", "In-view margin", "enter", len([], -50, 50, 1, ["%"]), "--n-enter-margin"),
   M("enterOnce", "Play once", "enter", sel("once", "every"), "--n-enter-once"),
+  M("enterLead", "Next starts after", "enter", num(0, 150, 1, "%"), "--n-enter-lead", {
+    description: "Sequencing as a share of one item's duration: 0% = all together, 33% = overlap, 100% = one after another. Overrides Stagger.",
+    keywords: ["sequence", "overlap", "cascade", "one by one"],
+  }),
+  M("enterCap", "Longest sequence", "enter", { type: "time", min: 0, max: 6000, step: 50 }, "--n-enter-cap", {
+    description: "Caps the total sequence length so long lists never take forever. 0 = no cap.",
+  }),
+  M("enterGroup", "Sequence across", "enter", sel("siblings", "section", "none"), "--n-enter-group", {
+    description: "siblings = items with the same parent cascade together; section = everything revealed inside one section shares one sequence; none = each item on its own.",
+  }),
+];
+
+/* ---------------- motion: open & close (pop-ups, menus, dialogs, drawers, toasts) ---------------- */
+export const OPEN_EFFECTS = ["none", "fade", "pop", "rise", "fall", "slide-left", "slide-right", "slide-up", "slide-down", "zoom", "blur", "flip"] as const;
+/** Start pose per open effect. Distances use --n-open-distance so one slider scales them. */
+const OPEN_POSE: Record<string, Record<string, string>> = {
+  fade: {},
+  pop: { "--n-open-scale": "0.96", "--n-open-y": "calc(var(--n-open-distance, 6px) * 0.66)" },
+  rise: { "--n-open-y": "var(--n-open-distance, 8px)" },
+  fall: { "--n-open-y": "calc(var(--n-open-distance, 8px) * -1)" },
+  "slide-left": { "--n-open-x": "var(--n-open-distance, 100%)", "--n-open-opacity": "1" },
+  "slide-right": { "--n-open-x": "calc(var(--n-open-distance, 100%) * -1)", "--n-open-opacity": "1" },
+  "slide-up": { "--n-open-y": "var(--n-open-distance, 100%)", "--n-open-opacity": "1" },
+  "slide-down": { "--n-open-y": "calc(var(--n-open-distance, 100%) * -1)", "--n-open-opacity": "1" },
+  zoom: { "--n-open-scale": "0.88" },
+  blur: { "--n-open-blur": "8px", "--n-open-scale": "0.98" },
+  flip: { "--n-open-rx": "-14deg", "--n-open-y": "calc(var(--n-open-distance, 6px) * 0.5)" },
+};
+export const CLOSE_EFFECTS = ["mirror", "fade", "shrink", "sink", "none"] as const;
+
+const PRESENCE: PropertyDef[] = [
+  M("openEffect", "Open animation", "presence", sel(...OPEN_EFFECTS), "--n-open", {
+    keywords: ["popup", "modal", "menu", "appear", "enter"],
+    emit: (v) => {
+      if (v === "none") return [{ prop: "animation-name", value: "none" }];
+      const pose = OPEN_POSE[v] ?? {};
+      const decls = [
+        { prop: "--n-open-x", value: "0px" },
+        { prop: "--n-open-y", value: "0px" },
+        { prop: "--n-open-scale", value: "1" },
+        { prop: "--n-open-rx", value: "0deg" },
+        { prop: "--n-open-blur", value: "0px" },
+        { prop: "--n-open-opacity", value: "0" },
+      ].map((d) => ({ prop: d.prop, value: pose[d.prop] ?? d.value }));
+      return [
+        ...decls,
+        { prop: "animation-name", value: `var(--n-presence-anim, ${v === "blur" ? "n-open-blur" : "n-open"})` },
+        { prop: "animation-duration", value: "calc(var(--n-open-duration, 200ms) / var(--n-presence-k, 1) / var(--n-motion-speed, 1))" },
+        { prop: "animation-timing-function", value: "var(--n-presence-ease, var(--n-open-easing, var(--n-easing-enter)))" },
+        { prop: "animation-fill-mode", value: "both" },
+      ];
+    },
+  }),
+  M("openDuration", "Open duration", "presence", time, "--n-open-duration", { tokens: ["duration"] }),
+  M("openEasing", "Open easing", "presence", easing, "--n-open-easing", { tokens: ["easing"] }),
+  M("openDistance", "Travel distance", "presence", len([], 0, 400, 1, ["px", "%"]), "--n-open-distance"),
+  M("closeEffect", "Close animation", "presence", sel(...CLOSE_EFFECTS), "--n-close", {
+    description: "mirror = the open animation played backwards.",
+    emit: (v) => [{ prop: "--n-close-anim", value: v === "none" ? "none" : `n-close-${v}` }],
+  }),
+  M("closeSpeed", "Close speed", "presence", num(0.5, 4, 0.1, "×"), "--n-close-speed", {
+    description: "How much faster closing is than opening. 2× = closes in half the time.",
+  }),
+  M("closeEasing", "Close easing", "presence", easing, "--n-close-easing", { tokens: ["easing"] }),
+];
+
+/* ---------------- motion: loops (autonomous, seamless) ---------------- */
+const LOOP: PropertyDef[] = [
+  M("loopDuration", "Loop length", "loop", { type: "time", min: 500, max: 120000, step: 250 }, "--n-loop-duration", {
+    inherits: true,
+    description: "Time for one full cycle at 1× speed.",
+    keywords: ["cycle", "period"],
+  }),
+  M("loopSpeed", "Loop speed", "loop", num(0.1, 4, 0.05, "×"), "--n-loop-speed", { inherits: true }),
+  M("loopDirection", "Loop direction", "loop", sel("normal", "reverse"), "--n-loop-direction", { inherits: true }),
+  M("loopIntensity", "Loop intensity", "loop", num(0, 3, 0.05), "--n-loop-intensity", { inherits: true, description: "How far / how strongly the loop moves." }),
+  S("loopPauseOnHover", "Pause on hover", "loop", sel("no", "yes"), undefined, {
+    kind: "motion",
+    pseudo: ":hover",
+    emit: (v) => (v === "yes" ? [{ prop: "--n-loop-state", value: "paused" }] : []),
+  }),
+  M("loopPlay", "Play", "loop", sel("in-view", "always"), "--n-loop-play", {
+    description: "in-view pauses the loop while it is off screen (saves battery).",
+  }),
 ];
 
 /* ---------------- motion: interaction fx ---------------- */
@@ -561,6 +645,8 @@ export const PROPERTIES: PropertyDef[] = [
   ...CONTENT,
   ...TRANSITION,
   ...ENTER,
+  ...PRESENCE,
+  ...LOOP,
   ...FX,
   ...SCROLL,
   ...AMBIENT,

@@ -66,6 +66,13 @@ export function Popover({ trigger, title, children, variant = "default", size = 
 
 /* ---------------- Dialog ---------------- */
 
+/**
+ * The portal is force-mounted so our root wrapper (which carries data-n for the part selectors) never
+ * decides when to unmount. Radix passes the portal's forceMount down to Overlay and Content, so they
+ * opt back out here: each keeps its own presence and plays its close animation before unmounting.
+ */
+const ownPresence = { forceMount: false as unknown as true };
+
 export const Dialog = RDialog.Root;
 export const DialogTrigger = RDialog.Trigger;
 export const DialogClose = RDialog.Close;
@@ -81,10 +88,10 @@ export interface DialogContentProps extends NProps {
 /** Dialog — focus trapped and restored, Escape closes, page made inert (Radix). */
 export function DialogContent({ title, description, eyebrow, footer, children, variant = "default", size = "md", nid }: DialogContentProps) {
   return (
-    <RDialog.Portal>
+    <RDialog.Portal forceMount>
       <div {...nRoot("dialog", { variant, size, nid })}>
-      <RDialog.Overlay {...nPart("dialog", "overlay")} />
-      <RDialog.Content {...nPart("dialog", "panel")} aria-describedby={description ? undefined : undefined}>
+      <RDialog.Overlay {...ownPresence} {...nPart("dialog", "overlay")} />
+      <RDialog.Content {...ownPresence} {...nPart("dialog", "panel")} aria-describedby={description ? undefined : undefined}>
         <div {...nPart("dialog", "header")}>
           <div>
             {eyebrow ? <span {...nPart("dialog", "eyebrow")}>{eyebrow}</span> : null}
@@ -122,10 +129,10 @@ export function Drawer({ open, onOpenChange, trigger, title, description, footer
   return (
     <RDialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger ? <RDialog.Trigger asChild>{trigger}</RDialog.Trigger> : null}
-      <RDialog.Portal>
+      <RDialog.Portal forceMount>
         <div {...nRoot("drawer", { variant, size, nid })}>
-        <RDialog.Overlay {...nPart("drawer", "overlay")} />
-        <RDialog.Content {...nPart("drawer", "panel")} aria-describedby={undefined}>
+        <RDialog.Overlay {...ownPresence} {...nPart("drawer", "overlay")} />
+        <RDialog.Content {...ownPresence} {...nPart("drawer", "panel")} aria-describedby={undefined}>
           <div {...nPart("drawer", "header")}>
             <div>
               <RDialog.Title {...nPart("drawer", "title")}>{title}</RDialog.Title>
@@ -164,9 +171,17 @@ const TOAST_ICON: Record<string, IconName> = { neutral: "bell", success: "check-
 
 /** Toaster — provides useToast(); renders an aria-live region. Duration comes from the toastDuration behaviour prop. */
 export function Toaster({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<Array<ToastData & { id: string }>>([]);
+  const [items, setItems] = useState<Array<ToastData & { id: string; closing?: boolean }>>([]);
   const vp = useRef<HTMLOListElement>(null);
-  const remove = useCallback((id: string) => setItems((xs) => xs.filter((x) => x.id !== id)), []);
+  const drop = useCallback((id: string) => setItems((xs) => xs.filter((x) => x.id !== id)), []);
+  // Closing plays the (faster) close animation first; a timer guarantees removal even without animationend.
+  const remove = useCallback(
+    (id: string) => {
+      setItems((xs) => xs.map((x) => (x.id === id ? { ...x, closing: true } : x)));
+      setTimeout(() => drop(id), 700);
+    },
+    [drop],
+  );
   const push = useCallback(
     (t: ToastData) => {
       const id = t.id ?? Math.random().toString(36).slice(2);
@@ -182,7 +197,7 @@ export function Toaster({ children }: { children: ReactNode }) {
       {children}
       <ol ref={vp} aria-live="polite" aria-label="Notifications" {...nRoot("toaster", {}, { variant: "bottom-right" })}>
         {items.map((t) => (
-          <li key={t.id} {...nRoot("toast", { variant: t.variant ?? "neutral" })}>
+          <li key={t.id} {...nRoot("toast", { variant: t.variant ?? "neutral" })} data-state={t.closing ? "closed" : "open"} onAnimationEnd={(e) => t.closing && e.target === e.currentTarget && drop(t.id)}>
             <Icon name={t.icon ?? TOAST_ICON[t.variant ?? "neutral"]} {...nPart("toast", "icon")} />
             <div {...nPart("toast", "content")}>
               <span {...nPart("toast", "title")}>{t.title}</span>
@@ -290,10 +305,10 @@ export function CommandPalette({ open, onOpenChange, items, placeholder = "Type 
 
   return (
     <RDialog.Root open={open} onOpenChange={close}>
-      <RDialog.Portal>
+      <RDialog.Portal forceMount>
         <div {...nRoot("commandPalette", { nid }, { variant: "default" })}>
-        <RDialog.Overlay {...nPart("commandPalette", "overlay")} />
-        <RDialog.Content {...nPart("commandPalette", "panel")} aria-describedby={undefined}>
+        <RDialog.Overlay {...ownPresence} {...nPart("commandPalette", "overlay")} />
+        <RDialog.Content {...ownPresence} {...nPart("commandPalette", "panel")} aria-describedby={undefined}>
           <RDialog.Title style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>{label}</RDialog.Title>
           <div {...nPart("commandPalette", "search")}>
             <Icon name="search" />

@@ -394,6 +394,17 @@ Open the system in Normy Studio, change it, export the Agent Kit again and repla
 `;
 }
 
+/** The system's own entrance settings per component (owner rules), as a table for agents. */
+function entranceTable(s: DesignSystem): string {
+  const KEYS = ["enterEffect", "enterDuration", "enterLead", "enterStagger", "enterStaggerFrom", "enterGroup", "enterTrigger"];
+  const rows = s.rules.filter((r) => r.scope.component && KEYS.some((k) => k in r.props));
+  if (!rows.length) return "\nThis system uses the component defaults for entrances.";
+  const cell = (v: unknown) => (v === undefined ? "—" : typeof v === "object" ? "custom" : `\`${String(v)}\``);
+  return `\n| Where | Effect | Duration | Next starts after | Order | Trigger |\n|---|---|---|---|---|---|\n${rows
+    .map((r) => `| ${r.scope.component}${r.scope.part ? `.${r.scope.part}` : ""}${r.scope.variant ? ` (${r.scope.variant})` : ""} | ${cell(r.props.enterEffect)} | ${cell(r.props.enterDuration)} | ${r.props.enterLead !== undefined ? `\`${r.props.enterLead}%\`` : cell(r.props.enterStagger)} | ${cell(r.props.enterStaggerFrom)} | ${cell(r.props.enterTrigger)} |`)
+    .join("\n")}`;
+}
+
 export function motionMd(s: DesignSystem): string {
   const animated = Array.from(new Set(s.rules.filter((r) => r.props && ("enter" in r.props || "fx" in r.props || "scrollEffect" in r.props)).map((r) => r.scope.component).filter(Boolean)));
   return `# Motion — ${s.meta.name}
@@ -408,6 +419,24 @@ ${["instant", "fast", "base", "slow", "slower"].map((k) => `| \`--n-duration-${k
 ${["standard", "enter", "exit", "emphasized", "linear", "spring"].map((k) => `| \`--n-easing-${k}\` | \`${tv(s, `easing.${k}`)}\` |`).join("\n")}
 
 ${animated.length ? `Components with system motion (entrance, effects or scroll): ${animated.map((c) => `\`${c}\``).join(", ")}.` : "This system defines no extra entrance effects beyond the component defaults."}
+
+## The three kinds of motion (all come from the kit — do not rebuild them)
+
+### 1. Entrance — how content appears, and in what order
+Kit components with an entrance animate in when they scroll into view (or on load), once. Several items that appear together follow one **sequence**:
+- \`--n-enter-lead\`: the next item starts after this share of one item's duration (0% = all together, 33% = overlap, 100% = one after another). Never make items wait for the previous one to finish unless the system says 100%.
+- \`--n-enter-from\`: order (first, last, center, random). \`--n-enter-group\`: what shares one sequence (siblings, section, none). \`--n-enter-cap\`: longest total sequence.
+- Content is never hidden without JavaScript, never re-hidden once visible, and reduced-motion users get it instantly.
+${entranceTable(s)}
+
+### 2. Open & close — pop-ups, menus, dialogs, drawers, toasts
+Kit overlays open with the system's open animation and close **faster** with the close animation (\`closeSpeed\`, default 1.6×), staying mounted until the close finishes. The backdrop only fades. Use the kit's \`Dialog\`, \`Drawer\`, \`Popover\`, \`Dropdown\`, \`Select\`, \`Tooltip\`, \`useToast\`, \`CommandPalette\` — never hand-build an overlay, or it will not match.
+
+### 3. Loops — things that move on their own
+Use the kit's loop components (category "loops" in \`components.md\`: marquee, marquee columns, gallery rows, word rotator, news ticker, aurora, grid glow, starfield, meteors, orbit, pulse rings, border beam, shine text, equalizer, loader, wave line, rotating badge). They loop seamlessly, pause off screen, honour \`--n-motion-loop-speed\` (all loops: \`${tv(s, "motion.loop-speed")}\`×) and stop for reduced motion. Do not write your own infinite CSS animations for these jobs. If you must, the last frame must equal the first, repeated tracks are duplicated exactly twice and moved by -50%, and spacing between repeated items is padding, never \`gap\`.
+
+### Interactive — hover, press, focus
+Hover, press and focus reactions are part of each kit component (transitions, lift, press scale, ripple, tilt, magnetic). Do not add your own hover transforms or shadows to kit components.
 
 ## When you need custom motion
 

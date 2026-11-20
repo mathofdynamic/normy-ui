@@ -102,6 +102,25 @@ export function Marquee({ variant = "fade", nid, label, children }: NProps & { l
   const track = useRef<HTMLDivElement>(null);
   const b = useBehavior(ref, { marqueeSpeed: "60", marqueeDirection: "left", marqueePause: "yes" });
   const hovering = useRef(false);
+  const items = Children.toArray(children);
+  const [copies, setCopies] = useState(2);
+
+  // Enough copies that the strip always covers the region, even on very wide screens.
+  useEffect(() => {
+    const el = track.current;
+    const region = ref.current;
+    if (!el || !region) return;
+    const fit = () => {
+      const kids = el.children as HTMLCollectionOf<HTMLElement>;
+      if (kids.length <= items.length) return;
+      const period = kids[items.length].offsetLeft - kids[0].offsetLeft;
+      if (period > 0) setCopies(Math.max(2, Math.ceil(region.clientWidth / period) + 1));
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(region);
+    return () => ro.disconnect();
+  }, [items.length]);
 
   useEffect(() => {
     const el = track.current;
@@ -112,34 +131,43 @@ export function Marquee({ variant = "fade", nid, label, children }: NProps & { l
     const speed = parseFloat(b.marqueeSpeed) || 60;
     const dir = b.marqueeDirection === "right" ? 1 : -1;
     const tick = (now: number) => {
-      const dt = (now - last) / 1000;
+      const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
-      if (!(hovering.current && b.marqueePause !== "no")) {
-        const half = el.scrollWidth / 2;
-        x += dir * speed * dt;
-        if (x <= -half) x += half;
-        if (x > 0) x -= half;
+      const paused = (hovering.current && b.marqueePause !== "no") || ref.current?.hasAttribute("data-n-paused");
+      if (!paused) {
+        // One period = where the second copy starts. Measuring it (instead of scrollWidth / 2)
+        // includes the gap after the last item, so the loop lands exactly on itself: no jump.
+        const kids = el.children as HTMLCollectionOf<HTMLElement>;
+        const period = kids.length > items.length ? kids[items.length].offsetLeft - kids[0].offsetLeft : el.scrollWidth / 2;
+        const cs = getComputedStyle(el);
+        const motion = (parseFloat(cs.getPropertyValue("--n-motion-speed")) || 1) * (parseFloat(cs.getPropertyValue("--n-motion-loop-speed")) || 1);
+        x += dir * speed * motion * dt;
+        if (period > 0) {
+          while (x <= -period) x += period;
+          while (x > 0) x -= period;
+        }
         el.style.transform = `translate3d(${x}px,0,0)`;
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [b.marqueeSpeed, b.marqueeDirection, b.marqueePause]);
+  }, [b.marqueeSpeed, b.marqueeDirection, b.marqueePause, items.length]);
 
-  const items = Children.toArray(children);
   return (
     <section
       ref={ref}
       aria-label={label}
       {...nRoot("marquee", { variant, nid })}
+      data-n-loop=""
+      suppressHydrationWarning
       onPointerEnter={() => (hovering.current = true)}
       onPointerLeave={() => (hovering.current = false)}
     >
       <div ref={track} {...nPart("marquee", "track")}>
-        {[0, 1].map((copy) =>
+        {Array.from({ length: copies }, (_, copy) => copy).map((copy) =>
           items.map((c, i) => (
-            <div key={`${copy}-${i}`} aria-hidden={copy === 1 || undefined} {...nPart("marquee", "item")}>
+            <div key={`${copy}-${i}`} aria-hidden={copy > 0 || undefined} {...nPart("marquee", "item")}>
               {c}
             </div>
           )),

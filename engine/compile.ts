@@ -95,12 +95,13 @@ function compositeDecls(id: CompositeId): Decl[] {
 
 /* ---------------- header (static engine CSS) ---------------- */
 
-function header(): string {
+function header(components: ComponentDef[] = []): string {
   const regs: string[] = [];
   const reg = (name: string) => regs.push(`@property ${name}{syntax:"*";inherits:false}`);
   for (const names of Object.values(SLOT_NAMES)) for (const n of names) reg(slotVar(n));
   for (const d of PROPERTIES) if (d.cssVar && !d.inherits) reg(d.cssVar);
   reg("--n-amb-amp");
+  for (const v of ["--n-presence-anim", "--n-presence-k", "--n-presence-ease", "--n-close-anim", "--n-open-x", "--n-open-y", "--n-open-scale", "--n-open-rx", "--n-open-blur", "--n-open-opacity"]) reg(v);
   for (const v of LAYOUT_VARS) reg(v);
 
   const keyframes = `
@@ -125,7 +126,14 @@ function header(): string {
 @keyframes n-drawer-in-right{from{translate:100% 0}}
 @keyframes n-drawer-in-left{from{translate:-100% 0}}
 @keyframes n-toast-in{from{opacity:0;translate:0 12px;scale:.97}}
-@keyframes n-caret{50%{opacity:0}}`;
+@keyframes n-caret{50%{opacity:0}}
+@keyframes n-open{from{opacity:var(--n-open-opacity,0);transform:perspective(900px) translate(var(--n-open-x,0px),var(--n-open-y,0px)) scale(var(--n-open-scale,1)) rotateX(var(--n-open-rx,0deg))}}
+@keyframes n-open-blur{from{opacity:var(--n-open-opacity,0);transform:translate(var(--n-open-x,0px),var(--n-open-y,0px)) scale(var(--n-open-scale,1));filter:blur(var(--n-open-blur,0px))}}
+@keyframes n-close-mirror{to{opacity:var(--n-open-opacity,0);transform:perspective(900px) translate(var(--n-open-x,0px),var(--n-open-y,0px)) scale(var(--n-open-scale,1)) rotateX(var(--n-open-rx,0deg));filter:blur(var(--n-open-blur,0px))}}
+@keyframes n-close-fade{to{opacity:0}}
+@keyframes n-close-shrink{to{opacity:0;transform:scale(.96)}}
+@keyframes n-close-sink{to{opacity:0;transform:translate3d(0,8px,0)}}
+${components.map((c) => c.keyframes ?? "").filter(Boolean).join("\n")}`;
 
   const motionPolicy = `
 html[data-n-motion="off"] *,html[data-n-motion="off"] *::before,html[data-n-motion="off"] *::after,
@@ -139,7 +147,9 @@ body{margin:0}
 :where([data-n],[data-n-part])::before,:where([data-n],[data-n-part])::after{box-sizing:border-box}
 ::selection{background-color:var(--n-color-selection)}
 [data-n-ripple]{position:absolute;border-radius:50%;pointer-events:none;background:var(--n-fx-ripple-color, currentColor);animation:n-ripple calc(600ms / var(--n-motion-speed,1)) var(--n-easing-standard) forwards}
-[data-n-enter-pending]{visibility:hidden}`;
+[data-n-enter-pending]{visibility:hidden}
+[data-state="closed"]{--n-presence-anim:var(--n-close-anim, n-close-mirror);--n-presence-k:var(--n-close-speed, 1.6);--n-presence-ease:var(--n-close-easing, var(--n-easing-exit))}
+[data-n-paused],[data-n-paused] *{animation-play-state:paused!important}`;
 
   return `${regs.join("\n")}\n${keyframes}\n${motionPolicy}\n${base}\n`;
 }
@@ -284,7 +294,7 @@ export function compile(system: DesignSystem, components: ComponentDef[], opts: 
   const bpPx = (bp: string) => Number(system.tokens[`bp.${bp}`] ?? getDef(`bp.${bp}`)?.default ?? 0);
 
   const parts: string[] = [];
-  if (!opts.bare) parts.push(header());
+  if (!opts.bare) parts.push(header(components));
   parts.push(tokenBlock(system));
 
   const manifest: MotionManifest = { enter: [], scroll: [], fx: [] };

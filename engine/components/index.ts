@@ -2,10 +2,11 @@ import type { ComponentDef } from "../types";
 import { DISPLAY } from "./display";
 import { FORMS } from "./forms";
 import { FOUNDATION } from "./foundation";
+import { LOOPS } from "./loops";
 import { NAVIGATION } from "./navigation";
 
 /** Every component definition the engine knows. Order = catalogue order. */
-export const COMPONENTS: ComponentDef[] = [...FOUNDATION, ...FORMS, ...NAVIGATION, ...DISPLAY];
+export const COMPONENTS: ComponentDef[] = [...FOUNDATION, ...FORMS, ...NAVIGATION, ...DISPLAY, ...LOOPS];
 
 const BY_TYPE = new Map(COMPONENTS.map((c) => [c.type, c]));
 export const getComponent = (type: string) => BY_TYPE.get(type);

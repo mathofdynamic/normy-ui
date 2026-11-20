@@ -77,7 +77,7 @@ async function session(name, { width = 1440, height = 900, scheme = "light", ui 
 {
   const { p, shot, ctx } = await session("d", { width: 1280, height: 720, scheme: "dark", ui: { size: "compact", width: 340 } });
   await shot("compact-dark");
-  await p.getByRole("button", { name: "Toggle light / dark preview" }).click();
+  await p.getByRole("button", { name: "Toggle light / dark" }).click();
   await p.locator(".st-rail-btn", { hasText: "Pages" }).click();
   await shot("compact-pages-darkpreview");
   await p.locator(".st-rail-btn", { hasText: "Hide" }).click();

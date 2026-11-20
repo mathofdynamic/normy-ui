@@ -180,8 +180,9 @@ export const dropdown = define({
   states: ["hover", "focus", "disabled", "open"],
   defaultVariant: "default",
   recipe: [
-    root({ zIndex: "{z.dropdown}" }),
-    part("content", { "animation-name": "n-pop-in", "animation-duration": "calc(var(--n-duration-base) / var(--n-motion-speed, 1))", "animation-timing-function": "var(--n-easing-enter)", minWidth: "12rem", padding: "{space.1}", bg: "{color.surface-raised}", borderWidth: "{border.thin}", borderStyle: "solid", borderColor: "{color.border}", radius: "{radius.md}", shadow: "{shadow.4}", ambientEffect: "none", transformOrigin: "var(--radix-dropdown-menu-content-transform-origin)" }),
+    // The animation sits on the Radix Content (root): Radix reads its animation to wait for the close.
+    root({ zIndex: "{z.dropdown}", openEffect: "pop", openDistance: "6px", openDuration: "{duration.base}", transformOrigin: "var(--radix-dropdown-menu-content-transform-origin)" }),
+    part("content", { minWidth: "12rem", padding: "{space.1}", bg: "{color.surface-raised}", borderWidth: "{border.thin}", borderStyle: "solid", borderColor: "{color.border}", radius: "{radius.md}", shadow: "{shadow.4}", ambientEffect: "none" }),
     part("item", { display: "flex", alignItems: "center", gap: "{space.2-5}", height: "{size.control-sm}", paddingX: "{space.2-5}", radius: "{radius.sm}", fontSize: "{text.sm}", color: "{color.text}", cursor: "pointer", outlineStyle: "none", userSelect: "none" }),
     R({ part: "item", state: "focus" }, { bg: "{color.surface-sunken}" }),
     R({ part: "item", state: "hover" }, { bg: "{color.surface-sunken}" }),

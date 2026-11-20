@@ -29,12 +29,13 @@ Open **`/studio`**. The first visit asks you to pick a starting look.
 | 1. Style | **Style** panel | Big choices, one click each: starter look, brand colour (or any colour), neutrals, corners, spacing, fonts, depth, motion. *Fine-tune* opens the exact tokens. |
 | 2. Edit | **Edit** panel, or **Select** in the canvas dock (shortcut **I**) | Click an element. Choose *Every button / Only one style / Just this one*, pick a state tab (Hover, Pressed…), and change its essentials. *Show all properties* has everything else. |
 | 3. Components | **Pages / Components** switch in the top bar, or the **Components** rail item | *Card view*: every component as a card. Open one for its *canvas view*: every variant, size and frozen state, its motion (entrance, pointer, scroll; replay it), and its parts. The Edit panel opens on that component, so you can perfect each one on its own, then switch back to real pages. |
-| 4. Check | Top bar | Switch page, device (Phone/Tablet/Desktop/Fit) and light/dark. Compare shows before/after. |
-| 5. Guide | **Guide** panel | What the product is and how it should feel, rule packs (grid, readable text, motion, stable layout, craft, page kinds, proof), your own do/never rules, and the lessons log. |
-| 6. Save & export | **Save**, **Library**, **Export** | Versions on disk (`design-systems/<id>/`), restore, compare, import. **Export → Agent Kit** (recommended) or raw CSS, Tailwind v4, TypeScript, W3C tokens, JSON. |
+| 4. Motion | **Pages / Components / Motion** switch, or the **Motion** rail item | All movement in one place, with a live page for each kind. **Entrance**: scenarios (Calm, Snappy, Cinematic, One by one…), which blocks animate, effect tiles that preview themselves, duration, easing, and the *sequence*: all at once, overlap (next starts after N% of the previous), one by one or a fixed gap, plus order, what shares a sequence, longest sequence and trigger. **Open & close**: how every pop-up opens and how much faster it closes, backdrop fade, menu rows cascading in. **Interactive**: hover (lift, grow, glow, tilt, magnetic, spotlight…), press shrink, ripple and timing per kind of element, with every state side by side. **Loops**: 17 seamless loop components, one speed for all loops, pause on hover, play off screen, and ambient loops for any element. |
+| 5. Check | Top bar | Switch page, device (Phone/Tablet/Desktop/Fit) and light/dark (the Studio and the page switch together). Compare shows before/after. |
+| 6. Guide | **Guide** panel | What the product is and how it should feel, rule packs (grid, readable text, motion, stable layout, craft, page kinds, proof), your own do/never rules, and the lessons log. |
+| 7. Save & export | **Save**, **Library**, **Export** | Versions on disk (`design-systems/<id>/`), restore, compare, import. **Export → Agent Kit** (recommended) or raw CSS, Tailwind v4, TypeScript, W3C tokens, JSON. |
 
 For experts, **Edit → Advanced** is the full cascade inspector: every scope (component, variant,
-size, part, instance, state, breakpoint, mode), all 263 properties and where each value comes from.
+size, part, instance, state, breakpoint, mode), all 279 properties and where each value comes from.
 
 **Comfort.** Drag the panel edge to resize it (double-click resets). The rail has **Aa** for interface
 size (Small/Medium/Large) and **Hide** to give the canvas the whole width.
@@ -78,6 +79,7 @@ That writes `<project>/normy/` (keeping an existing `review-log.md`), adds an in
 ```bash
 pnpm check          # typecheck + lint
 pnpm e2e            # Studio end-to-end (own dev server on :3100)
+URL=http://localhost:3001 node scripts/motion-check.mjs   # Motion section, overlays, loops, theme
 pnpm kit <system> <project>   # install / update an Agent Kit in a project
 pnpm screenshots    # all pages × 390/768/1440 × light/dark → screenshots/final
 pnpm build          # production build
@@ -85,11 +87,11 @@ pnpm build          # production build
 
 ## Under the hood
 
-Every visual and motion decision is data: a registry of 411 properties (148 tokens + 263 component
+Every visual and motion decision is data: a registry of 428 properties (149 tokens + 279 component
 properties), resolved through an 8-level cascade into one stylesheet. See `docs/ARCHITECTURE.md`,
 `docs/PROPERTY-SPACE.md` and `docs/DECISIONS.md`; progress is in `PROGRESS.md`.
 
 - `engine/`: registry, cascade, compiler, exports, diff, contrast, runtime
-- `components/normy/`: the library (65 components)
+- `components/normy/`: the library (81 components, 16 of them loops)
 - `components/studio/`: the Studio
 - `design-systems/`: your saved systems (git-ignored)

@@ -92,6 +92,15 @@ review of those screenshots.
 - [x] Studio: Pages | Components switch, component picker, Components rail panel, Edit panel follows the open component
 - [x] components-check 10/10, e2e 14/14, kit UI 10/10, flash 10/10
 
+## M-m Motion: entrance, open & close, interactive, loops
+- [x] Motion panel + live canvas pages; Pages | Components | Motion switch
+- [x] Entrance sequencing (lead %, cap, group), scenarios, self-previewing effect tiles, timeline
+- [x] Open & close for every overlay (faster close, Radix-aware), toast close, menu row cascade
+- [x] Interactive recipes (hover, press, ripple, timing) with every state side by side
+- [x] 16 new loop components (4 parallel agents) + loop controls, master loop speed, off-screen pause
+- [x] Bugs: marquee seam jump, unreadable page menu in dark, Studio/page theme out of sync
+- [x] motion-check 17/17, components-check 10/10, e2e 14/14, kit UI 10/10, flash 10/10; kit typechecks in a fresh app
+
 ## Log
 - 2026-11-18: engine + 62 components render from data (smoke test light/dark OK, no console errors). Notes:
   hydration-safe motion runtime (no DOM attribute bookkeeping); stateful parts; overlay roots are display:contents wrappers.

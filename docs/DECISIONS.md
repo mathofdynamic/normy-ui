@@ -185,4 +185,29 @@ interface was tiny, and nothing could be resized. These decisions answer that re
     unchanged. A Pages | Components switch stays in the top bar at every width and remembers the
     last place in each view; opening a component focuses the Edit panel on it. Samples come from the
     Atlas; stages measure each sample and scale it only as far as needed (tall ones fit by width).
-
+47. **Three kinds of motion, one panel.** Entrance, open & close, interactive and loops each have a
+    tab in the Studio's Motion panel and a live page on the canvas (`/preview/motion-studio/<tab>`;
+    `/preview/motion` is the older Motion Lab). Every control writes ordinary rules and tokens, so
+    exports and the Agent Kit carry it without extra plumbing.
+48. **Entrance sequence is a share of the duration.** `enterLead` (0–150 %) says when the next item
+    starts relative to the previous one (0 = together, 33 = overlap, 100 = one after another), from the
+    entrance-motion skill's "next starts at a third". `enterCap` bounds the total, `enterGroup` lets a
+    whole section share one sequence. Fixed-ms stagger stays for systems that use it.
+49. **Open and close are their own property group (`presence`).** One pair of keyframes driven by
+    variables; closing replays the opening backwards (or fade/shrink/sink) `closeSpeed`× faster
+    (default 1.6). A `[data-state="closed"]` rule swaps the animation name so Radix waits for it.
+    Our portal wrapper (which carries `data-n`) is force-mounted and Overlay/Content opt back into
+    their own presence; the menu animation moved onto Radix Content. Radix Select has no exit phase,
+    so select lists animate on open only. Dialogs use one open animation at every width, because a
+    breakpoint-scoped recipe value would outrank a user's edit on desktop.
+50. **Loops are components with a contract** (`engine/components/loops.ts`): `data-n-loop` root (the
+    runtime pauses it off screen), `loopAnim()` for cascade-driven length/speed/direction/pause,
+    keyframes on the component def, seamless by construction (two copies, -50 %, padding not gap) and
+    verified by comparing frames at the wrap. A master `motion.loop-speed` token scales all loops.
+    Sixteen were built in parallel by four agents, each owning three files.
+51. **One theme for the Studio and the page.** The light/dark toggle drives the Studio chrome and the
+    canvas together and is remembered. Native `<option>`s get explicit themed colours, because the OS
+    draws the list and otherwise showed light text on a white list.
+52. **Marquee period is measured, not halved.** `scrollWidth / 2` ignored the gap after the last
+    item, so each lap jumped by half a gap. The period is now where the second copy starts, and the
+    marquee adds copies when the region is wider than two.

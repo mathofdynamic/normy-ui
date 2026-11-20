@@ -231,15 +231,10 @@ export const dataList = define({
 
 /* ---------------- overlays ---------------- */
 
-const anim = (name: string, dur = "base", ease = "enter") => ({
-  "animation-name": name,
-  "animation-duration": `calc(var(--n-duration-${dur}) / var(--n-motion-speed, 1))`,
-  "animation-timing-function": `var(--n-easing-${ease})`,
-  "animation-fill-mode": "both",
-});
-const fadeIn = anim("n-fade-in");
-const popIn = anim("n-pop-in");
-const sheetIn = anim("n-sheet-in", "slow");
+/* Open & close (registry group "presence"): one shared contract, editable per component in the Motion panel.
+   Closing replays the opening backwards, faster (closeSpeed, default 1.6×). */
+const fadeIn = { openEffect: "fade", openDuration: "{duration.base}" };
+const popIn = { openEffect: "pop", openDistance: "6px", openDuration: "{duration.base}" };
 const popup = { zIndex: "{z.dropdown}", bg: "{color.surface-raised}", color: "{color.text}", borderWidth: "{border.thin}", borderStyle: "solid", borderColor: "{color.border}", radius: "{radius.overlay}", shadow: "{shadow.4}" };
 
 export const tooltip = define({
@@ -297,8 +292,10 @@ export const dialog = define({
   recipe: [
     root({ display: "contents" }),
     part("overlay", { ...overlayScrim, ...fadeIn }),
-    part("panel", { ...sheetIn, position: "fixed", zIndex: "{z.modal}", display: "flex", flexDirection: "column", left: 0, right: 0, bottom: 0, maxHeight: "88dvh", bg: "{color.surface-raised}", color: "{color.text}", borderWidth: "{border.thin}", borderStyle: "solid", borderColor: "{color.border}", radiusTopLeft: "{radius.overlay}", radiusTopRight: "{radius.overlay}", shadow: "{shadow.5}", outlineStyle: "none" }),
-    R({ bp: "sm", part: "panel" }, { ...popIn, left: "50%", right: "auto", bottom: "auto", top: "50%", translateX: "-50%", translateY: "-50%", width: "calc(100vw - 2rem)", maxWidth: "32rem", radius: "{radius.overlay}" }),
+    // One open animation on every screen size, so a Motion-panel edit to dialogs applies everywhere
+    // (a breakpoint-scoped recipe value would outrank it on desktop).
+    part("panel", { ...popIn, position: "fixed", zIndex: "{z.modal}", display: "flex", flexDirection: "column", left: 0, right: 0, bottom: 0, maxHeight: "88dvh", bg: "{color.surface-raised}", color: "{color.text}", borderWidth: "{border.thin}", borderStyle: "solid", borderColor: "{color.border}", radiusTopLeft: "{radius.overlay}", radiusTopRight: "{radius.overlay}", shadow: "{shadow.5}", outlineStyle: "none" }),
+    R({ bp: "sm", part: "panel" }, { left: "50%", right: "auto", bottom: "auto", top: "50%", translateX: "-50%", translateY: "-50%", width: "calc(100vw - 2rem)", maxWidth: "32rem", radius: "{radius.overlay}" }),
     R({ bp: "sm", size: "sm", part: "panel" }, { maxWidth: "24rem" }),
     R({ bp: "sm", size: "lg", part: "panel" }, { maxWidth: "44rem" }),
     part("header", { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "{space.6}", paddingX: "{space.6}", paddingTop: "{space.6}" }),
@@ -327,9 +324,9 @@ export const drawer = define({
   recipe: [
     root({ display: "contents" }),
     part("overlay", { ...overlayScrim, ...fadeIn }),
-    part("panel", { ...anim("n-drawer-in-right", "slow"), position: "fixed", zIndex: "{z.modal}", top: 0, bottom: 0, right: 0, display: "flex", flexDirection: "column", width: "min(26rem, 92vw)", bg: "{color.surface-raised}", color: "{color.text}", borderLeftWidth: "{border.thin}", borderStyle: "solid", borderColor: "{color.border}", borderTopWidth: 0, borderRightWidth: 0, borderBottomWidth: 0, shadow: "{shadow.5}", outlineStyle: "none" }),
-    R({ variant: "left", part: "panel" }, { right: "auto", left: 0, borderLeftWidth: 0, borderRightWidth: "{border.thin}", "animation-name": "n-drawer-in-left" }),
-    R({ variant: "bottom", part: "panel" }, { top: "auto", left: 0, width: "100%", maxHeight: "85dvh", borderLeftWidth: 0, borderTopWidth: "{border.thin}", radiusTopLeft: "{radius.overlay}", radiusTopRight: "{radius.overlay}", "animation-name": "n-sheet-in" }),
+    part("panel", { openEffect: "slide-left", openDistance: "100%", openDuration: "{duration.slow}", position: "fixed", zIndex: "{z.modal}", top: 0, bottom: 0, right: 0, display: "flex", flexDirection: "column", width: "min(26rem, 92vw)", bg: "{color.surface-raised}", color: "{color.text}", borderLeftWidth: "{border.thin}", borderStyle: "solid", borderColor: "{color.border}", borderTopWidth: 0, borderRightWidth: 0, borderBottomWidth: 0, shadow: "{shadow.5}", outlineStyle: "none" }),
+    R({ variant: "left", part: "panel" }, { right: "auto", left: 0, borderLeftWidth: 0, borderRightWidth: "{border.thin}", openEffect: "slide-right" }),
+    R({ variant: "bottom", part: "panel" }, { top: "auto", left: 0, width: "100%", maxHeight: "85dvh", borderLeftWidth: 0, borderTopWidth: "{border.thin}", radiusTopLeft: "{radius.overlay}", radiusTopRight: "{radius.overlay}", openEffect: "slide-up" }),
     R({ size: "sm", part: "panel" }, { width: "min(20rem, 92vw)" }),
     R({ size: "lg", part: "panel" }, { width: "min(40rem, 96vw)" }),
     part("header", { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "{space.4}", padding: "{space.5}", borderBottomWidth: "{border.thin}", borderStyle: "solid", borderColor: "{color.border}", borderTopWidth: 0, borderLeftWidth: 0, borderRightWidth: 0 }),
@@ -351,7 +348,7 @@ export const toast = define({
   states: ["open"],
   defaultVariant: "neutral",
   recipe: [
-    root({ pointerEvents: "auto", display: "flex", alignItems: "flex-start", gap: "{space.3}", width: "min(24rem, 100%)", padding: "{space.4}", bg: "{color.surface-raised}", borderWidth: "{border.thin}", borderStyle: "solid", borderColor: "{color.border}", radius: "{radius.overlay}", shadow: "{shadow.4}", color: "{color.text}", enterEffect: "rise", enterY: 12, enterDuration: 320, enterTrigger: "load" }),
+    root({ pointerEvents: "auto", display: "flex", alignItems: "flex-start", gap: "{space.3}", width: "min(24rem, 100%)", padding: "{space.4}", bg: "{color.surface-raised}", borderWidth: "{border.thin}", borderStyle: "solid", borderColor: "{color.border}", radius: "{radius.overlay}", shadow: "{shadow.4}", color: "{color.text}", openEffect: "rise", openDistance: "12px", openDuration: "320ms" }),
     part("icon", { color: "{color.text-subtle}", marginTop: "1px", iconSize: "1.1rem" }),
     part("content", { flex: "1 1 auto", minWidth: 0, display: "flex", flexDirection: "column", gap: "{space.0-5}" }),
     part("title", { fontSize: "{text.sm}", fontWeight: "{weight.semibold}" }),

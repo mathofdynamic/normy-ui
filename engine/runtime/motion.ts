@@ -55,9 +55,15 @@ export interface EnterConfig {
   threshold: number;
   margin: string;
   once: boolean;
+  /** Next item starts after this share (0–150 %) of one item's duration. null = use stagger ms. */
+  lead: number | null;
+  /** Max total sequence length (ms). 0 = no cap. */
+  cap: number;
+  /** What shares one sequence: siblings (same parent), section, or none (each on its own). */
+  group: string;
 }
 
-const PRESETS: Record<string, Partial<EnterConfig>> = {
+export const PRESETS: Record<string, Partial<EnterConfig>> = {
   fade: { opacity: 0 },
   rise: { opacity: 0, y: "24px" },
   fall: { opacity: 0, y: "-24px" },
@@ -103,6 +109,9 @@ export function readEnter(el: Element): EnterConfig | null {
     threshold: num(v("threshold"), 0.15),
     margin: v("margin") || "0%",
     once: (v("once") || "once") !== "every",
+    lead: v("lead") ? num(v("lead"), 33) : null,
+    cap: parseTime(v("cap"), 0),
+    group: v("group") || "siblings",
   };
 }
 
@@ -197,18 +206,55 @@ function queue(el: HTMLElement, c: EnterConfig) {
   if (!batchRaf) batchRaf = requestAnimationFrame(flush);
 }
 
+const SECTION_SEL = '[data-n="section"],[data-n="hero"],[data-n="footer"],[data-n="card"],section,header,footer,main,[role="dialog"],[role="menu"],[role="listbox"]';
+
+function groupKey(el: HTMLElement, group: string): Element | null {
+  if (group === "none") return el;
+  if (group === "section") return el.parentElement?.closest(SECTION_SEL) ?? el.parentElement;
+  return el.parentElement;
+}
+
+/** Delay between consecutive starts for a batch of n items. */
+export function stepFor(c: EnterConfig, n: number) {
+  let step = c.lead !== null ? (c.duration * c.lead) / 100 : c.stagger;
+  if (c.cap > 0 && n > 1 && step * (n - 1) > c.cap) step = c.cap / (n - 1);
+  return step;
+}
+
 function flush() {
   batchRaf = 0;
   const groups = new Map<Element | null, typeof batch>();
   for (const item of batch) {
-    const key = item.el.parentElement;
+    const key = groupKey(item.el, item.c.group);
     groups.set(key, [...(groups.get(key) ?? []), item]);
   }
   batch = [];
   for (const items of groups.values()) {
     items.sort((a, b) => (a.el.compareDocumentPosition(b.el) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
-    items.forEach((it, i) => playEnter(it.el, it.c, staggerIndex(i, items.length, it.c.from) * it.c.stagger));
+    const step = stepFor(items[0].c, items.length);
+    items.forEach((it, i) => playEnter(it.el, it.c, staggerIndex(i, items.length, it.c.from) * step));
   }
+}
+
+/* ---------------- loops: pause off screen ---------------- */
+
+let loopIo: IntersectionObserver | null = null;
+let loopSeen = new WeakSet<Element>();
+
+function scanLoops(root: ParentNode) {
+  if (typeof IntersectionObserver === "undefined") return;
+  loopIo ??= new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      const el = e.target as HTMLElement;
+      const always = cssVar(getComputedStyle(el), "--n-loop-play") === "always";
+      el.toggleAttribute("data-n-paused", !e.isIntersecting && !always);
+    }
+  });
+  root.querySelectorAll<HTMLElement>("[data-n-loop]").forEach((el) => {
+    if (loopSeen.has(el)) return;
+    loopSeen.add(el);
+    loopIo!.observe(el);
+  });
 }
 
 /**
@@ -317,6 +363,7 @@ export function scan(root: ParentNode = document) {
     }
   }
   behaviours(root);
+  scanLoops(root);
   onScroll();
   releasePre();
 }
@@ -713,6 +760,9 @@ export function startMotion() {
     offApply();
     mo?.disconnect();
     io.forEach((o) => o.disconnect());
+    loopIo?.disconnect();
+    loopIo = null;
+    loopSeen = new WeakSet();
     document.removeEventListener("pointermove", onMove);
     document.removeEventListener("pointerdown", onDown);
     window.removeEventListener("scroll", onScroll);

@@ -86,7 +86,11 @@ import { CATS } from "./component-list";
  * States are frozen with data-n-force, exactly like the Studio does.
  * ------------------------------------------------------------------ */
 
-type Sample = (v: string, s?: string) => ReactNode;
+import type { Sample } from "./sample-type";
+import { LOOP_SAMPLES_A, LOOP_WIDE_A } from "./samples-loops-a";
+import { LOOP_SAMPLES_B, LOOP_WIDE_B } from "./samples-loops-b";
+import { LOOP_SAMPLES_C, LOOP_WIDE_C } from "./samples-loops-c";
+import { LOOP_SAMPLES_D, LOOP_WIDE_D } from "./samples-loops-d";
 
 export function Forced({ states, children }: { states: StateName[]; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -346,11 +350,15 @@ export const SAMPLES: Record<string, Sample> = {
   price: (v) => <Price variant={v} amount={49} period="seat / mo" strike="$59" />,
   appShell: () => <Text variant="caption">Dashboard frame — see the Dashboard pages.</Text>,
   pageHeader: (v) => <PageHeader variant={v} eyebrow="Workspace" title="Customers" description="64 accounts" actions={<Button size="sm">Add</Button>} />,
+  ...LOOP_SAMPLES_A,
+  ...LOOP_SAMPLES_B,
+  ...LOOP_SAMPLES_C,
+  ...LOOP_SAMPLES_D,
 };
 
 export { CATS } from "./component-list";
 
-export const WIDE = new Set(["section", "navbar", "hero", "footer", "carousel", "marquee", "table", "chart", "calendar", "sidebar", "card", "pageHeader", "tabs", "accordion", "media"]);
+export const WIDE = new Set(["section", "navbar", "hero", "footer", "carousel", "marquee", "table", "chart", "calendar", "sidebar", "card", "pageHeader", "tabs", "accordion", "media", ...LOOP_WIDE_A, ...LOOP_WIDE_B, ...LOOP_WIDE_C, ...LOOP_WIDE_D]);
 export const STATE_COLS: StateName[] = ["hover", "focus", "active", "disabled", "selected", "error", "loading", "open", "current"];
 
 export function Atlas() {

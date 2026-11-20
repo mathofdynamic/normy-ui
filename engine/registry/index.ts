@@ -3,7 +3,7 @@ import { PROPERTIES } from "./properties";
 import { TOKENS } from "./tokens";
 
 export { TOKENS, tokenVar, NON_VAR_TOKENS, SPACE_STEPS } from "./tokens";
-export { PROPERTIES, ENTER_PRESETS, AMBIENT_EFFECTS } from "./properties";
+export { PROPERTIES, ENTER_PRESETS, AMBIENT_EFFECTS, OPEN_EFFECTS, CLOSE_EFFECTS } from "./properties";
 
 export interface GroupMeta {
   id: GroupId;
@@ -36,7 +36,9 @@ export const GROUPS: GroupMeta[] = [
   { id: "svg", label: "SVG & charts", section: "style", description: "Fill and stroke for marks" },
   { id: "content", label: "Generated content", section: "style", description: "::before / ::after text" },
   { id: "transition", label: "Transitions", section: "motion", description: "State-change timing (enter on state, exit on base)" },
-  { id: "enter", label: "Entrance", section: "motion", description: "How elements appear" },
+  { id: "enter", label: "Entrance", section: "motion", description: "How elements appear, and in what sequence" },
+  { id: "presence", label: "Open & close", section: "motion", description: "Pop-ups, menus, dialogs, drawers: opening and (faster) closing" },
+  { id: "loop", label: "Loop", section: "motion", description: "Seamless autonomous loops: length, speed, direction, pause" },
   { id: "fx", label: "Interaction fx", section: "motion", description: "Magnetic, tilt, ripple, spotlight, cursor" },
   { id: "scroll", label: "Scroll", section: "motion", description: "Scroll-linked effects and pinning" },
   { id: "ambient", label: "Ambient", section: "motion", description: "Autonomous loops" },

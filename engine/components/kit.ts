@@ -12,6 +12,21 @@ export const motion: Props = {
   transitionEasing: "{easing.standard}",
 };
 
+/**
+ * A seamless infinite CSS animation driven by the "loop" registry group:
+ * length (--n-loop-duration), speed, direction, pause on hover, master motion speed.
+ * `phase` (0–1) offsets the start so several items share one loop out of step.
+ */
+export const loopAnim = (name: string, fallback = "20s", timing = "linear", phase?: string): Props => ({
+  "animation-name": name,
+  "animation-duration": `calc(var(--n-loop-duration, ${fallback}) / var(--n-loop-speed, 1) / var(--n-motion-loop-speed, 1) / var(--n-motion-speed, 1))`,
+  "animation-timing-function": timing,
+  "animation-iteration-count": "infinite",
+  "animation-direction": "var(--n-loop-direction, normal)",
+  "animation-play-state": "var(--n-loop-state, running)",
+  ...(phase ? { "animation-delay": `calc(var(--n-loop-duration, ${fallback}) / var(--n-loop-speed, 1) / var(--n-motion-loop-speed, 1) / var(--n-motion-speed, 1) * -1 * ${phase})` } : {}),
+});
+
 export const focus = (partName?: string): RecipeRule => R({ state: "focus", part: partName }, { focusRing: "token" });
 export const disabled = (partName?: string): RecipeRule =>
   R({ state: "disabled", part: partName }, { opacity: "{opacity.disabled}", cursor: "not-allowed" });

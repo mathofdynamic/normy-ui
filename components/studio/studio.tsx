@@ -19,6 +19,8 @@ import { ExportPanel, HistoryPanel, saveCurrent, SystemsPanel } from "./panels";
 import { GuidePanel } from "./guide-panel";
 import { CATS, COMPONENTS_PATH } from "@/components/preview/component-list";
 import { StylePanel } from "./style-panel";
+import { MotionPanel } from "./motion-panel";
+import { MOTION_PATH, MOTION_TABS } from "@/components/preview/motion-list";
 import { DEVICES, useStudio, type Device, type Panel } from "./store";
 import { SystemThumb } from "./system-thumb";
 
@@ -144,6 +146,8 @@ function TopBar({ onPalette, onHelp, ui }: { onPalette: () => void; onHelp: () =
   const dirty = system !== baseline && JSON.stringify(system) !== JSON.stringify(baseline);
   const current = PREVIEW_PAGES.find((p) => p.path === page);
   const inComponents = page.startsWith(COMPONENTS_PATH);
+  const inMotion = page.startsWith(MOTION_PATH);
+  const view = inComponents ? "components" : inMotion ? "motion" : "pages";
 
   const save = async () => {
     try {
@@ -170,16 +174,27 @@ function TopBar({ onPalette, onHelp, ui }: { onPalette: () => void; onHelp: () =
 
       <div className="st-top-center">
         <div className="st-seg st-seg-top st-view-switch" role="radiogroup" aria-label="Canvas view">
-          <button type="button" role="radio" aria-checked={!inComponents} data-active={!inComponents ? "" : undefined} onClick={() => inComponents && st.set({ page: st.lastPage, instances: [] })}>
+          <button type="button" role="radio" aria-checked={view === "pages"} data-active={view === "pages" ? "" : undefined} onClick={() => view !== "pages" && st.set({ page: st.lastPage, instances: [] })}>
             Pages
           </button>
-          <button type="button" role="radio" aria-checked={inComponents} data-active={inComponents ? "" : undefined} onClick={() => !inComponents && st.set({ page: st.lastComponentPage, instances: [] })}>
+          <button type="button" role="radio" aria-checked={view === "components"} data-active={view === "components" ? "" : undefined} onClick={() => view !== "components" && st.set({ page: st.lastComponentPage, instances: [] })}>
             Components
+          </button>
+          <button type="button" role="radio" aria-checked={view === "motion"} data-active={view === "motion" ? "" : undefined} onClick={() => view !== "motion" && st.set({ page: st.lastMotionPage, instances: [], panel: "motion", panelOpen: true })}>
+            Motion
           </button>
         </div>
         <label className="st-page-pick">
-          <Icon name={inComponents ? "grid" : (current?.icon ?? "layout")} />
-          {inComponents ? (
+          <Icon name={inComponents ? "grid" : inMotion ? "zap" : (current?.icon ?? "layout")} />
+          {inMotion ? (
+            <select aria-label="Kind of motion" value={page.match(/^\/preview\/motion-studio\/[^/?#]+/)?.[0] ?? `${MOTION_PATH}/entrance`} onChange={(e) => st.set({ page: e.target.value, instances: [] })}>
+              {MOTION_TABS.map((t) => (
+                <option key={t.id} value={`${MOTION_PATH}/${t.id}`}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          ) : inComponents ? (
             <select aria-label="Component" value={page} onChange={(e) => st.set({ page: e.target.value, instances: [] })}>
               <option value={COMPONENTS_PATH}>All components</option>
               {CATS.map((g) => {
@@ -225,8 +240,8 @@ function TopBar({ onPalette, onHelp, ui }: { onPalette: () => void; onHelp: () =
             </option>
           ))}
         </select>
-        <Tooltip content={mode === "dark" ? "Switch preview to light" : "Switch preview to dark"}>
-          <button type="button" className="st-icon st-icon-lg" aria-label="Toggle light / dark preview" onClick={() => st.set({ mode: mode === "dark" ? "light" : "dark" })}>
+        <Tooltip content={mode === "dark" ? "Switch to light (Studio and page)" : "Switch to dark (Studio and page)"}>
+          <button type="button" className="st-icon st-icon-lg" aria-label="Toggle light / dark" onClick={() => st.set({ mode: mode === "dark" ? "light" : "dark" })}>
             <Icon name={mode === "dark" ? "moon" : "sun"} />
           </button>
         </Tooltip>
@@ -288,6 +303,7 @@ function TopBar({ onPalette, onHelp, ui }: { onPalette: () => void; onHelp: () =
 const RAIL: Array<{ id: Panel; label: string; icon: Parameters<typeof Icon>[0]["name"]; hint: string }> = [
   { id: "style", label: "Style", icon: "palette", hint: "Colours, type, shape, depth, motion" },
   { id: "edit", label: "Edit", icon: "cursor", hint: "Click anything and change it" },
+  { id: "motion", label: "Motion", icon: "zap", hint: "Entrance, open & close, hover and press, loops" },
   { id: "components", label: "Components", icon: "grid", hint: "Every component, one at a time" },
   { id: "pages", label: "Pages", icon: "layout", hint: "Preview your system on real pages" },
   { id: "guide", label: "Guide", icon: "wand", hint: "The rules your AI agents follow" },
@@ -310,7 +326,11 @@ function Rail({ ui }: { ui: ReturnType<typeof useUiPrefs> }) {
             className="st-rail-btn"
             aria-current={panel === r.id && open ? "page" : undefined}
             data-active={panel === r.id && open ? "" : undefined}
-            onClick={() => set(panel === r.id ? { panelOpen: !open } : { panel: r.id, panelOpen: true })}
+            onClick={() => {
+              set(panel === r.id ? { panelOpen: !open } : { panel: r.id, panelOpen: true });
+              // The Motion panel works with its live pages on the canvas.
+              if (r.id === "motion" && panel !== r.id && !useStudio.getState().page.startsWith(MOTION_PATH)) set({ page: useStudio.getState().lastMotionPage, instances: [] });
+            }}
           >
             <Icon name={r.icon} />
             <span>{r.label}</span>
@@ -441,7 +461,7 @@ function PanelHost({ width, setWidth }: { width: number; setWidth: (w: number) =
   return (
     <aside className="st-panel" ref={ref} style={{ width }} aria-label={`${panel} panel`}>
       <div className="st-panel-scroll" key={panel}>
-        {panel === "style" ? <StylePanel /> : panel === "edit" ? <EditPanel /> : panel === "pages" ? <PagesPanel /> : panel === "components" ? <ComponentsPanel /> : panel === "guide" ? <GuidePanel /> : (
+        {panel === "style" ? <StylePanel /> : panel === "edit" ? <EditPanel /> : panel === "motion" ? <MotionPanel /> : panel === "pages" ? <PagesPanel /> : panel === "components" ? <ComponentsPanel /> : panel === "guide" ? <GuidePanel /> : (
           <div className="st-panel-body">
             <div className="st-panel-intro">
               <h2>{panel === "library" ? "Library" : panel === "export" ? "Export" : "History"}</h2>
@@ -587,6 +607,7 @@ function Palette({ open, setOpen }: { open: boolean; setOpen: (o: boolean) => vo
       { id: "style", group: "Go to", label: "Style: colours, fonts, corners…", icon: "palette", onSelect: () => go("style") },
       { id: "edit", group: "Go to", label: "Edit components", icon: "cursor", onSelect: () => go("edit") },
       { id: "components", group: "Go to", label: "Components: every part, one at a time", icon: "grid", onSelect: () => { go("components"); st().set({ page: "/preview/components", instances: [] }); } },
+      { id: "motion", group: "Go to", label: "Motion: entrance, open & close, hover, loops", icon: "zap", onSelect: () => st().set({ panel: "motion", panelOpen: true, page: st().lastMotionPage, instances: [] }) },
       { id: "guide", group: "Go to", label: "Guide: rules for AI agents", icon: "wand", onSelect: () => go("guide") },
       { id: "export", group: "Go to", label: "Export / Agent Kit…", icon: "upload", onSelect: () => go("export") },
       { id: "systems", group: "Go to", label: "Library: saved systems & versions", icon: "layers", onSelect: () => go("library") },
@@ -617,9 +638,28 @@ export function Studio() {
   const firstRun = useCallback(() => setWelcome(true), []);
   usePersistence(firstRun);
   // The Studio's chrome runs its own fixed system.
+  // One theme for everything: the Studio's own interface and the page being designed switch together.
   useEffect(() => {
     applySystem(STUDIO_SYSTEM);
-    applyMode("system", false);
+    let initial: "light" | "dark" = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    try {
+      const p = JSON.parse(localStorage.getItem(UI_KEY) ?? "{}");
+      if (p.mode === "light" || p.mode === "dark") initial = p.mode;
+    } catch {
+      /* ignore */
+    }
+    useStudio.setState({ mode: initial });
+    applyMode(initial, false);
+    return useStudio.subscribe((s, prev) => {
+      if (s.mode === prev.mode) return;
+      applyMode(s.mode, false);
+      try {
+        const cur = JSON.parse(localStorage.getItem(UI_KEY) ?? "{}");
+        localStorage.setItem(UI_KEY, JSON.stringify({ ...cur, mode: s.mode }));
+      } catch {
+        /* ignore */
+      }
+    });
   }, []);
   // Pages | Components: remember where each view was, and opening one component
   // (Canvas View) focuses the Edit panel on it.
@@ -628,12 +668,14 @@ export function Studio() {
       useStudio.subscribe((s, prev) => {
         if (s.page === prev.page) return;
         const inComponents = s.page.startsWith(COMPONENTS_PATH);
+        const inMotion = s.page.startsWith(MOTION_PATH);
         const m = s.page.match(/^\/preview\/components\/([^/?#]+)/);
         if (m && s.scope.component !== m[1]) {
           useStudio.getState().setScope({ component: m[1] });
           useStudio.setState({ panel: "edit", panelOpen: true, advanced: false });
         }
-        useStudio.setState(inComponents ? { lastComponentPage: s.page } : { lastPage: s.page });
+        if (inMotion && !prev.page.startsWith(MOTION_PATH)) useStudio.setState({ panel: "motion", panelOpen: true });
+        useStudio.setState(inComponents ? { lastComponentPage: s.page } : inMotion ? { lastMotionPage: s.page } : { lastPage: s.page });
       }),
     [],
   );

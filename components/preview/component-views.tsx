@@ -367,9 +367,20 @@ function describe(el: HTMLElement, label: string): MotionRow | null {
   if (fx("cursor") && fx("cursor") !== "none") bits.push(`cursor ${fx("cursor")}`);
   if (fx("press") && fx("press") !== "1") bits.push(`press scale ${fx("press")}`);
   const sc = cs.getPropertyValue("--n-scroll").trim();
-  const scroll = sc && sc !== "none" ? sc : "—";
-  if (!enter && !bits.length && scroll === "—") return null;
-  return { element: label, entrance, interaction: bits.join(" · ") || "—", scroll };
+  const other: string[] = [];
+  if (sc && sc !== "none") other.push(`scroll ${sc}`);
+  if (el.hasAttribute("data-n-loop")) {
+    const v = (n: string) => cs.getPropertyValue(n).trim();
+    other.push(`loop ${v("--n-loop-duration") || "default length"} at ${v("--n-loop-speed") || "1"}×${v("--n-loop-direction") === "reverse" ? " reversed" : ""}`);
+  }
+  const names = cs.animationName.split(",").map((x) => x.trim());
+  const counts = cs.animationIterationCount.split(",").map((x) => x.trim());
+  const looping = names.filter((n, i) => n !== "none" && (counts[i] ?? counts[0]) === "infinite");
+  if (looping.length) other.push(`moves forever · ${Math.round(parseFloat(cs.animationDuration) * (cs.animationDuration.includes("ms") ? 1 : 1000))}ms cycle`);
+  const open = cs.getPropertyValue("--n-open").trim();
+  if (open && open !== "none") other.push(`opens with ${open}, closes ${cs.getPropertyValue("--n-close-speed").trim() || "1.6"}× faster`);
+  if (!enter && !bits.length && !other.length) return null;
+  return { element: label, entrance, interaction: bits.join(" · ") || "—", scroll: other.join(" · ") || "—" };
 }
 
 function MotionTable({ type, parts, replayKey }: { type: string; parts: string[]; replayKey: number }) {
@@ -407,7 +418,7 @@ function MotionTable({ type, parts, replayKey }: { type: string; parts: string[]
               <Th>Element</Th>
               <Th>Entrance</Th>
               <Th>Pointer</Th>
-              <Th>Scroll</Th>
+              <Th>Loop · scroll · open</Th>
             </Tr>
           </THead>
           <TBody>
@@ -422,7 +433,7 @@ function MotionTable({ type, parts, replayKey }: { type: string; parts: string[]
           </TBody>
         </Table>
       ) : (
-        <Text variant="muted">This component has no motion in the current system. Add an entrance or a hover effect in the Edit panel → Motion.</Text>
+        <Text variant="muted">This component has no motion in the current system. Add an entrance, a hover effect or a loop in the Studio&apos;s Motion panel.</Text>
       )}
     </div>
   );

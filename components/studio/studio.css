@@ -2056,3 +2056,12 @@ div.st-choice {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+/* Pages | Components switch: always visible (the device segment hides on narrow screens). */
+.st-seg-top.st-view-switch {
+  display: flex;
+  flex: none;
+}
+.st-view-switch button {
+  padding: 0 0.75rem;
+}

@@ -28,9 +28,10 @@ Open **`/studio`**. The first visit asks you to pick a starting look.
 |---|---|---|
 | 1. Style | **Style** panel | Big choices, one click each: starter look, brand colour (or any colour), neutrals, corners, spacing, fonts, depth, motion. *Fine-tune* opens the exact tokens. |
 | 2. Edit | **Edit** panel, or **Select** in the canvas dock (shortcut **I**) | Click an element. Choose *Every button / Only one style / Just this one*, pick a state tab (Hover, Pressed…), and change its essentials. *Show all properties* has everything else. |
-| 3. Check | Top bar | Switch page, device (Phone/Tablet/Desktop/Fit) and light/dark. Compare shows before/after. |
-| 4. Guide | **Guide** panel | What the product is and how it should feel, rule packs (grid, readable text, motion, stable layout, craft, page kinds, proof), your own do/never rules, and the lessons log. |
-| 5. Save & export | **Save**, **Library**, **Export** | Versions on disk (`design-systems/<id>/`), restore, compare, import. **Export → Agent Kit** (recommended) or raw CSS, Tailwind v4, TypeScript, W3C tokens, JSON. |
+| 3. Components | **Pages / Components** switch in the top bar, or the **Components** rail item | *Card view*: every component as a card. Open one for its *canvas view*: every variant, size and frozen state, its motion (entrance, pointer, scroll; replay it), and its parts. The Edit panel opens on that component, so you can perfect each one on its own, then switch back to real pages. |
+| 4. Check | Top bar | Switch page, device (Phone/Tablet/Desktop/Fit) and light/dark. Compare shows before/after. |
+| 5. Guide | **Guide** panel | What the product is and how it should feel, rule packs (grid, readable text, motion, stable layout, craft, page kinds, proof), your own do/never rules, and the lessons log. |
+| 6. Save & export | **Save**, **Library**, **Export** | Versions on disk (`design-systems/<id>/`), restore, compare, import. **Export → Agent Kit** (recommended) or raw CSS, Tailwind v4, TypeScript, W3C tokens, JSON. |
 
 For experts, **Edit → Advanced** is the full cascade inspector: every scope (component, variant,
 size, part, instance, state, breakpoint, mode), all 263 properties and where each value comes from.
@@ -67,7 +68,8 @@ That writes `<project>/normy/` (keeping an existing `review-log.md`), adds an in
 |---|---|
 | `/` | Product home: starter looks you can try in place |
 | `/preview/saas` … | 19 real product pages (11 marketing, 8 app screens) |
-| `/preview/atlas` | Every component × variant × size × state |
+| `/preview/components` | Components: card view; `/preview/components/<name>` is one component in full |
+| `/preview/atlas` | Every component × variant × size × state on one long page |
 | `/preview/motion` | Motion Lab |
 | `/preview/analyzer` | Contrast, coverage, token usage, rule hygiene |
 

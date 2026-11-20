@@ -86,6 +86,12 @@ review of those screenshots.
 - [x] System fixes found by the audit (dark accent contrast, 11px labels, centred Hero)
 - [x] e2e 14/14, kit UI check 10/10, flash check 10/10, typecheck + lint clean
 
+## M-l Components view + page-change glitch
+- [x] Page transition never blanks the page; Studio canvas navigates instead of reloading (filmed: no empty frame)
+- [x] /preview/components card view and /preview/components/<type> canvas view (variants, sizes, states, motion + replay, anatomy)
+- [x] Studio: Pages | Components switch, component picker, Components rail panel, Edit panel follows the open component
+- [x] components-check 10/10, e2e 14/14, kit UI 10/10, flash 10/10
+
 ## Log
 - 2026-11-18: engine + 62 components render from data (smoke test light/dark OK, no console errors). Notes:
   hydration-safe motion runtime (no DOM attribute bookkeeping); stateful parts; overlay roots are display:contents wrappers.

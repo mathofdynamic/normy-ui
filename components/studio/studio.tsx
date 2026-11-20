@@ -17,6 +17,7 @@ import { Canvas } from "./canvas";
 import { describeScope, EditPanel, STATE_LABEL } from "./edit-panel";
 import { ExportPanel, HistoryPanel, saveCurrent, SystemsPanel } from "./panels";
 import { GuidePanel } from "./guide-panel";
+import { CATS, COMPONENTS_PATH } from "@/components/preview/component-list";
 import { StylePanel } from "./style-panel";
 import { DEVICES, useStudio, type Device, type Panel } from "./store";
 import { SystemThumb } from "./system-thumb";
@@ -142,6 +143,7 @@ function TopBar({ onPalette, onHelp, ui }: { onPalette: () => void; onHelp: () =
   const toast = useToast();
   const dirty = system !== baseline && JSON.stringify(system) !== JSON.stringify(baseline);
   const current = PREVIEW_PAGES.find((p) => p.path === page);
+  const inComponents = page.startsWith(COMPONENTS_PATH);
 
   const save = async () => {
     try {
@@ -167,20 +169,46 @@ function TopBar({ onPalette, onHelp, ui }: { onPalette: () => void; onHelp: () =
       </div>
 
       <div className="st-top-center">
+        <div className="st-seg st-seg-top st-view-switch" role="radiogroup" aria-label="Canvas view">
+          <button type="button" role="radio" aria-checked={!inComponents} data-active={!inComponents ? "" : undefined} onClick={() => inComponents && st.set({ page: st.lastPage, instances: [] })}>
+            Pages
+          </button>
+          <button type="button" role="radio" aria-checked={inComponents} data-active={inComponents ? "" : undefined} onClick={() => !inComponents && st.set({ page: st.lastComponentPage, instances: [] })}>
+            Components
+          </button>
+        </div>
         <label className="st-page-pick">
-          <Icon name={current?.icon ?? "layout"} />
-          <select aria-label="Preview page" value={current ? page : ""} onChange={(e) => st.set({ page: e.target.value, instances: [] })}>
-            {!current ? <option value="">{page}</option> : null}
-            {(["Landing", "Dashboard", "Labs"] as const).map((g) => (
-              <optgroup key={g} label={g}>
-                {PREVIEW_PAGES.filter((p) => p.group === g).map((p) => (
-                  <option key={p.path} value={p.path}>
-                    {p.title}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
+          <Icon name={inComponents ? "grid" : (current?.icon ?? "layout")} />
+          {inComponents ? (
+            <select aria-label="Component" value={page} onChange={(e) => st.set({ page: e.target.value, instances: [] })}>
+              <option value={COMPONENTS_PATH}>All components</option>
+              {CATS.map((g) => {
+                const items = COMPONENTS.filter((c) => c.category === g.id);
+                return items.length ? (
+                  <optgroup key={g.id} label={g.label}>
+                    {items.map((c) => (
+                      <option key={c.type} value={`${COMPONENTS_PATH}/${c.type}`}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ) : null;
+              })}
+            </select>
+          ) : (
+            <select aria-label="Preview page" value={current ? page : ""} onChange={(e) => st.set({ page: e.target.value, instances: [] })}>
+              {!current ? <option value="">{page}</option> : null}
+              {(["Landing", "Dashboard", "Labs"] as const).map((g) => (
+                <optgroup key={g} label={g}>
+                  {PREVIEW_PAGES.filter((p) => p.group === g).map((p) => (
+                    <option key={p.path} value={p.path}>
+                      {p.title}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          )}
           <Icon name="chevron-down" />
         </label>
         <div className="st-seg st-seg-top" role="radiogroup" aria-label="Device">
@@ -260,6 +288,7 @@ function TopBar({ onPalette, onHelp, ui }: { onPalette: () => void; onHelp: () =
 const RAIL: Array<{ id: Panel; label: string; icon: Parameters<typeof Icon>[0]["name"]; hint: string }> = [
   { id: "style", label: "Style", icon: "palette", hint: "Colours, type, shape, depth, motion" },
   { id: "edit", label: "Edit", icon: "cursor", hint: "Click anything and change it" },
+  { id: "components", label: "Components", icon: "grid", hint: "Every component, one at a time" },
   { id: "pages", label: "Pages", icon: "layout", hint: "Preview your system on real pages" },
   { id: "guide", label: "Guide", icon: "wand", hint: "The rules your AI agents follow" },
   { id: "library", label: "Library", icon: "layers", hint: "Saved systems, versions, import" },
@@ -342,6 +371,54 @@ function PagesPanel() {
   );
 }
 
+function ComponentsPanel() {
+  const page = useStudio((s) => s.page);
+  const set = useStudio((s) => s.set);
+  const [q, setQ] = useState("");
+  const list = COMPONENTS.filter((c) => (!q || `${c.label} ${c.type} ${c.description}`.toLowerCase().includes(q.toLowerCase())));
+  return (
+    <div className="st-panel-body">
+      <div className="st-panel-intro">
+        <h2>Components</h2>
+        <p>Check and edit each building block on its own: every variant, size, state and its motion. Pick one to open it.</p>
+        <label className="st-search">
+          <Icon name="search" />
+          <input placeholder="Find a component…" aria-label="Find a component" value={q} onChange={(e) => setQ(e.target.value)} />
+        </label>
+        <button type="button" className="st-btn st-btn-ghost" data-active={page === COMPONENTS_PATH ? "" : undefined} onClick={() => set({ page: COMPONENTS_PATH, instances: [] })}>
+          <Icon name="grid" /> See them all as cards
+        </button>
+      </div>
+      {CATS.map((g) => {
+        const items = list.filter((c) => c.category === g.id);
+        if (!items.length) return null;
+        return (
+          <section key={g.id} className="st-sec st-sec-list">
+            <h4 className="st-list-title">{g.label}</h4>
+            {items.map((c) => {
+              const path = `${COMPONENTS_PATH}/${c.type}`;
+              const v = c.variants.length || 1;
+              return (
+                <button key={c.type} type="button" className="st-item" data-active={page === path ? "" : undefined} onClick={() => set({ page: path, instances: [] })}>
+                  <span className="st-item-main">
+                    <b>{c.label}</b>
+                    <small>
+                      {v} variant{v === 1 ? "" : "s"}
+                      {c.sizes.length ? ` · ${c.sizes.length} size${c.sizes.length === 1 ? "" : "s"}` : ""}
+                      {c.states.length ? ` · ${c.states.length} state${c.states.length === 1 ? "" : "s"}` : ""}
+                    </small>
+                  </span>
+                </button>
+              );
+            })}
+          </section>
+        );
+      })}
+      {!list.length ? <p className="st-empty">No component matches “{q}”.</p> : null}
+    </div>
+  );
+}
+
 function PanelHost({ width, setWidth }: { width: number; setWidth: (w: number) => void }) {
   const panel = useStudio((s) => s.panel);
   const open = useStudio((s) => s.panelOpen);
@@ -364,7 +441,7 @@ function PanelHost({ width, setWidth }: { width: number; setWidth: (w: number) =
   return (
     <aside className="st-panel" ref={ref} style={{ width }} aria-label={`${panel} panel`}>
       <div className="st-panel-scroll" key={panel}>
-        {panel === "style" ? <StylePanel /> : panel === "edit" ? <EditPanel /> : panel === "pages" ? <PagesPanel /> : panel === "guide" ? <GuidePanel /> : (
+        {panel === "style" ? <StylePanel /> : panel === "edit" ? <EditPanel /> : panel === "pages" ? <PagesPanel /> : panel === "components" ? <ComponentsPanel /> : panel === "guide" ? <GuidePanel /> : (
           <div className="st-panel-body">
             <div className="st-panel-intro">
               <h2>{panel === "library" ? "Library" : panel === "export" ? "Export" : "History"}</h2>
@@ -509,6 +586,7 @@ function Palette({ open, setOpen }: { open: boolean; setOpen: (o: boolean) => vo
       { id: "redo", group: "System", label: "Redo", icon: "arrow-right", onSelect: () => st().redo() },
       { id: "style", group: "Go to", label: "Style: colours, fonts, corners…", icon: "palette", onSelect: () => go("style") },
       { id: "edit", group: "Go to", label: "Edit components", icon: "cursor", onSelect: () => go("edit") },
+      { id: "components", group: "Go to", label: "Components: every part, one at a time", icon: "grid", onSelect: () => { go("components"); st().set({ page: "/preview/components", instances: [] }); } },
       { id: "guide", group: "Go to", label: "Guide: rules for AI agents", icon: "wand", onSelect: () => go("guide") },
       { id: "export", group: "Go to", label: "Export / Agent Kit…", icon: "upload", onSelect: () => go("export") },
       { id: "systems", group: "Go to", label: "Library: saved systems & versions", icon: "layers", onSelect: () => go("library") },
@@ -543,6 +621,22 @@ export function Studio() {
     applySystem(STUDIO_SYSTEM);
     applyMode("system", false);
   }, []);
+  // Pages | Components: remember where each view was, and opening one component
+  // (Canvas View) focuses the Edit panel on it.
+  useEffect(
+    () =>
+      useStudio.subscribe((s, prev) => {
+        if (s.page === prev.page) return;
+        const inComponents = s.page.startsWith(COMPONENTS_PATH);
+        const m = s.page.match(/^\/preview\/components\/([^/?#]+)/);
+        if (m && s.scope.component !== m[1]) {
+          useStudio.getState().setScope({ component: m[1] });
+          useStudio.setState({ panel: "edit", panelOpen: true, advanced: false });
+        }
+        useStudio.setState(inComponents ? { lastComponentPage: s.page } : { lastPage: s.page });
+      }),
+    [],
+  );
   return (
     <Toaster>
       <div className="st-shell">

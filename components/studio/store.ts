@@ -15,7 +15,7 @@ export const DEVICES: Record<Device, { label: string; width: number | null }> = 
   fit: { label: "Fit", width: null },
 };
 
-export type Panel = "style" | "edit" | "pages" | "guide" | "library" | "export" | "history";
+export type Panel = "style" | "edit" | "pages" | "components" | "guide" | "library" | "export" | "history";
 
 export interface HistoryEntry {
   system: DesignSystem;
@@ -44,6 +44,9 @@ export interface StudioState {
   leftTab: "scope" | "pages" | "instances";
   /** Which panel the rail shows. */
   panel: Panel;
+  /** Last canvas page in each view, so the Pages | Components switch returns to it. */
+  lastPage: string;
+  lastComponentPage: string;
   panelOpen: boolean;
   /** Full cascade inspector instead of the simple editor. */
   advanced: boolean;
@@ -90,6 +93,8 @@ export const useStudio = create<StudioState>((set, get) => ({
   rightTab: "inspect",
   leftTab: "scope",
   panel: "style",
+  lastPage: "/preview/saas",
+  lastComponentPage: "/preview/components",
   panelOpen: true,
   advanced: false,
   clipboard: null,

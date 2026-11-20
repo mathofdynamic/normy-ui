@@ -78,7 +78,8 @@ import {
 } from "@/components/normy";
 import { Icon } from "@/components/normy/icon";
 import { COMPONENTS } from "@/engine/components";
-import type { Category, StateName } from "@/engine/types";
+import type { StateName } from "@/engine/types";
+import { CATS } from "./component-list";
 
 /* ------------------------------------------------------------------ *
  * Component Atlas — every component × variant × (size) × state.
@@ -87,7 +88,7 @@ import type { Category, StateName } from "@/engine/types";
 
 type Sample = (v: string, s?: string) => ReactNode;
 
-function Forced({ states, children }: { states: StateName[]; children: ReactNode }) {
+export function Forced({ states, children }: { states: StateName[]; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -135,7 +136,7 @@ function DrawerDemo({ v }: { v: string }) {
   );
 }
 
-const SAMPLES: Record<string, Sample> = {
+export const SAMPLES: Record<string, Sample> = {
   icon: (v) => (
     <Row gap={3} wrap>
       {(["chart-line", "users", "bell", "sparkle", "settings", "heart"] as const).map((n) => (
@@ -347,21 +348,10 @@ const SAMPLES: Record<string, Sample> = {
   pageHeader: (v) => <PageHeader variant={v} eyebrow="Workspace" title="Customers" description="64 accounts" actions={<Button size="sm">Add</Button>} />,
 };
 
-const CATS: Array<{ id: Category; label: string }> = [
-  { id: "layout", label: "Layout" },
-  { id: "typography", label: "Typography" },
-  { id: "actions", label: "Actions" },
-  { id: "forms", label: "Forms" },
-  { id: "navigation", label: "Navigation" },
-  { id: "data", label: "Data display" },
-  { id: "overlay", label: "Overlays" },
-  { id: "feedback", label: "Feedback" },
-  { id: "media", label: "Media & motion" },
-  { id: "blocks", label: "Blocks" },
-];
+export { CATS } from "./component-list";
 
-const WIDE = new Set(["section", "navbar", "hero", "footer", "carousel", "marquee", "table", "chart", "calendar", "sidebar", "card", "pageHeader", "tabs", "accordion", "media"]);
-const STATE_COLS: StateName[] = ["hover", "focus", "active", "disabled", "selected", "error", "loading", "open", "current"];
+export const WIDE = new Set(["section", "navbar", "hero", "footer", "carousel", "marquee", "table", "chart", "calendar", "sidebar", "card", "pageHeader", "tabs", "accordion", "media"]);
+export const STATE_COLS: StateName[] = ["hover", "focus", "active", "disabled", "selected", "error", "loading", "open", "current"];
 
 export function Atlas() {
   const [q, setQ] = useState("");

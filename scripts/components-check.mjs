@@ -1,0 +1,33 @@
+// Studio: Pages | Components switch, card view, canvas view, picker, panel. URL=http://localhost:3001 node scripts/components-check.mjs
+import { launch } from "./launch-browser.mjs";
+const b = await launch(); const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
+await ctx.addInitScript(() => localStorage.setItem("normy:studio-welcomed", "1"));
+const p = await ctx.newPage(); const errs = []; p.on("pageerror", (e) => errs.push(String(e)));
+let ok = true; const check = (n, c) => { console.log(`${c ? "PASS" : "FAIL"}  ${n}`); ok &&= !!c; };
+await p.goto((process.env.URL ?? "http://localhost:3001") + "/studio"); await p.waitForTimeout(4000);
+const frame = () => p.frameLocator("iframe[title='Live canvas']");
+await p.getByRole("radio", { name: "Components" }).click(); await p.waitForTimeout(3500);
+check("canvas shows the card view", await frame().getByRole("heading", { name: /components$/ }).first().isVisible());
+await p.screenshot({ path: "screenshots/kit/studio-cards.png" });
+await frame().getByRole("link", { name: "Open Button" }).click(); await p.waitForTimeout(3000);
+check("card opens the canvas view", await frame().getByRole("heading", { name: "Button", exact: true }).first().isVisible());
+const pick = await p.getByLabel("Component").inputValue();
+check("picker follows (" + pick + ")", pick === "/preview/components/button");
+check("edit panel focused on Button", await p.locator(".st-panel").getByText(/button/i).first().isVisible() && (await p.locator(".st-rail-btn[data-active]").textContent()).includes("Edit"));
+await p.screenshot({ path: "screenshots/kit/studio-button.png" });
+// live edit reaches the component view
+const before = await frame().locator('[data-n="button"]').first().evaluate((e) => getComputedStyle(e).borderRadius);
+await p.getByRole("radio", { name: "Pages" }).click(); await p.waitForTimeout(2500);
+check("Pages returns to the last page", (await p.getByLabel("Preview page").inputValue()) === "/preview/saas");
+await p.getByRole("radio", { name: "Components" }).click(); await p.waitForTimeout(2500);
+check("Components returns to Button", (await p.getByLabel("Component").inputValue()) === "/preview/components/button");
+await p.getByLabel("Component").selectOption("/preview/components/card"); await p.waitForTimeout(2500);
+check("picker switches component", await frame().getByRole("heading", { name: "Card", exact: true }).first().isVisible());
+await p.locator(".st-rail-btn", { hasText: "Components" }).click(); await p.waitForTimeout(400);
+check("components panel lists components", await p.locator(".st-panel .st-item").count() > 50);
+await p.setViewportSize({ width: 900, height: 800 }); await p.waitForTimeout(400);
+check("switch visible at 900px", await p.getByRole("radio", { name: "Components" }).isVisible());
+await p.screenshot({ path: "screenshots/kit/studio-900.png" });
+check("no page errors", !errs.length); if (errs.length) console.log(errs);
+console.log("radius sample", before);
+await b.close(); process.exitCode = ok ? 0 : 1;

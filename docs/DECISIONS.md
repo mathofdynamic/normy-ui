@@ -175,3 +175,14 @@ interface was tiny, and nothing could be resized. These decisions answer that re
     against white labels and 11px labels in 14 recipes. Dark accent is now `oklch(0.57 0.2 264)`
     (4.6:1), brand presets pick label colour and lightness by measured contrast (`fitFill`), and
     the labels use `{text.xs}` (12px).
+45. **Page changes never show an empty frame.** Filmed with a CDP screencast
+    (`scripts/film-nav.mjs`): the page effect took the whole page, header included, to opacity 0.
+    Page effects now stay at or above 85% opacity and move only `<main>`; sections keep their own
+    entrances, so a page is revealed once. The Studio canvas navigates inside its iframe (a
+    `navigate` message handled by the preview router) instead of reloading it.
+46. **Components are a first-class view, beside pages.** Card view and canvas view are preview
+    routes rendered inside the Studio canvas, so selection, live edits and outlines work there
+    unchanged. A Pages | Components switch stays in the top bar at every width and remembers the
+    last place in each view; opening a component focuses the Edit panel on it. Samples come from the
+    Atlas; stages measure each sample and scale it only as far as needed (tall ones fit by width).
+

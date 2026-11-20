@@ -78,7 +78,7 @@ export function Hub() {
           { label: "How it works", href: "#how" },
           { label: "Starters", href: "#systems" },
           { label: "Pages", href: "#previews" },
-          { label: "Components", href: "/preview/atlas" },
+          { label: "Components", href: "/preview/components" },
         ]}
         actions={
           <Button size="sm" href="/studio" nid="hub-studio">
@@ -234,7 +234,7 @@ export function Hub() {
           </Stack>
         }
         columns={[
-          { title: "Make", links: [{ label: "Studio", href: "/studio" }, { label: "Components", href: "/preview/atlas" }, { label: "Motion Lab", href: "/preview/motion" }] },
+          { title: "Make", links: [{ label: "Studio", href: "/studio" }, { label: "Components", href: "/preview/components" }, { label: "Motion Lab", href: "/preview/motion" }] },
           { title: "Check", links: [{ label: "Analyzer", href: "/preview/analyzer" }, { label: "SaaS page", href: "/preview/saas" }, { label: "Dashboard", href: "/preview/app" }] },
         ]}
         bottom="Normy · 2026"
